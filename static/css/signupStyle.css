@@ -10,7 +10,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(45deg, #2196f3, #3f51b5);
+    background: linear-gradient(45deg, #0a192f, #172a46);
     padding: 20px;
 }
 
@@ -20,10 +20,11 @@ body {
 }
 
 .signup-form {
-    background: white;
+    background: #172a46;
     padding: 40px;
     border-radius: 10px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    border: 1px solid #304a6e;
     transform: translateY(0);
     transition: transform 0.3s ease;
 }
@@ -33,10 +34,11 @@ body {
 }
 
 h2 {
-    color: #333;
+    color: #ccd6f6;
     text-align: center;
     margin-bottom: 30px;
     font-size: 28px;
+    font-weight: 600;
 }
 
 .form-group {
@@ -48,8 +50,10 @@ h2 {
     width: 100%;
     padding: 10px 0;
     font-size: 16px;
+    color: #ccd6f6;
+    background: transparent;
     border: none;
-    border-bottom: 2px solid #ddd;
+    border-bottom: 2px solid #304a6e;
     outline: none;
     transition: border-color 0.3s ease;
 }
@@ -59,37 +63,38 @@ h2 {
     top: 10px;
     left: 0;
     font-size: 16px;
-    color: #666;
+    color: #8892b0;
     pointer-events: none;
     transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group input:valid {
-    border-bottom-color: #2196f3;
+    border-bottom-color: #64ffda;
 }
 
 .form-group input:focus + label,
 .form-group input:not(:placeholder-shown) + label {
     top: -20px;
     font-size: 12px;
-    color: #2196f3;
+    color: #64ffda;
 }
 
 .signup-button {
     width: 100%;
     padding: 12px;
-    background: #2196f3;
-    color: white;
+    background: #64ffda;
+    color: #0a192f;
     border: none;
     border-radius: 5px;
     font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
     transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .signup-button:hover {
-    background: #1976d2;
+    background: #52d3b4;
     transform: translateY(-2px);
 }
 
@@ -100,17 +105,17 @@ h2 {
 .login-link {
     text-align: center;
     margin-top: 20px;
-    color: #666;
+    color: #8892b0;
 }
 
 .login-link a {
-    color: #2196f3;
+    color: #64ffda;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
 }
 
 .login-link a:hover {
-    color: #1976d2;
+    color: #52d3b4;
     text-decoration: underline;
 }

@@ -27,7 +27,7 @@ async def signup_page(request: Request):
 
 @router.post("/signup/save")
 async def signup(name: str = Form(...), email: str = Form(...), password: str = Form(...)):
-    result = await create_user(email, password, name)
+    result = create_user(email, password, name)
     
     if "error" in result:
         error_message = result["error"]
