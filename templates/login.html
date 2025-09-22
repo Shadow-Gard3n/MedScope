@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/css/loginStyle.css">
+    <!-- <script src="https://accounts.google.com/gsi/client" async defer></script> -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js"></script> -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js"></script> -->
+</head>
+<body>
+    {% if status %}
+        <div class = "status" style="
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #DFF2BF;
+            color: #4F8A10;
+            padding: 12px 20px;
+            border: 1px solid #4F8A10;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            z-index: 1000;
+        ">{{status}}</div>
+    {% endif %}
+
+    <!-- Loader Overlay -->
+    <!-- <div id="loader-overlay" style="
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(255, 255, 255, 0.8);
+        /* hides it initially */
+        display: none;  
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        ">
+        <div class="spinner" style="
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        "></div>
+    </div>
+
+    <style>
+        @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style> -->
+
+
+    <div class="container">
+        <form class="login-form" action="/login/save" method="post">
+            <h2>Welcome Back</h2>
+
+            {% if error %}
+                <p style="
+                display: flex;
+                align-items: center;
+                color: #D32F2F;
+                background-color: #FFEBEE;
+                border: 1px solid #D32F2F;
+                padding: 10px 15px;
+                border-radius: 8px;
+                font-size: 14px;
+                margin-top: 15px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                ">{{ error }}</p>
+            {% endif %}
+
+            <br>
+            
+            <div class="form-group">
+                <input type="email" name="email" required placeholder="">
+                <label>Email Address</label>
+            </div>
+
+            <div class="form-group">
+                <input type="password" name="password" required placeholder="">
+                <label>Password</label>
+            </div>
+
+            <button type="submit" class="login-button" onclick="disableButton(this)">Login</button>
+            <div class="separator">OR</div>
+            <button type="button" id="googleLoginBtn" class="google-btn">
+                <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo">
+                Continue with Google
+            </button>
+    
+            <div class="signup-link">
+                Already have an account? <a href="/signup">SignUp</a>
+            </div>
+        </form>
+
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+            import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+
+            const firebaseConfig = {
+                
+            };
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const googleProvider = new GoogleAuthProvider();
+
+            document.getElementById("googleLoginBtn").addEventListener("click", async (e) => {
+                e.preventDefault();
+                // const loader = document.getElementById("loader-overlay");
+                // if (loader) loader.style.display = "flex";
+                try {
+                    const result = await signInWithPopup(auth, googleProvider);
+                    const idToken = await result.user.getIdToken(); // get firebase token
+
+                    const response = await fetch("/login/google", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: new URLSearchParams({ id_token: idToken })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.user_id) {
+                        // document.cookie = `session=${data.id_token}; path=/; Secure;`;
+                        // successful login
+                        window.location.href = `/user/me`;
+                    } else {
+                        console.error("Login error:", data.error);
+                        alert("Login failed: " + data.error);
+                    }
+                } catch (error) {
+                    console.error("Google login error:", error);
+                    alert(error.message);
+                }
+            });
+
+            function disableButton(button) {
+                // const loader = document.getElementById("loader-overlay");
+                // if (loader) loader.style.display = "flex";
+                button.disabled = true;
+                button.innerHTML = 'Processing...';
+                button.form.submit();
+            }
+
+            if (window.location.search.includes("error=")) {
+                window.history.replaceState({}, document.title, "/login");
+            }
+            
+            // window.addEventListener("DOMContentLoaded", () => {
+            //     const statusDiv = document.querySelector(".status");
+            //     if (statusDiv) {
+            //         setTimeout(() => {
+            //             statusDiv.style.transition = "opacity 0.5s ease-out";
+            //             statusDiv.style.opacity = "0";
+            //             setTimeout(() => {
+            //                 statusDiv.style.display = "none";
+            //             }, 500); 
+            //         }, 3000);
+            //     }
+            // });
+
+        </script>
+    </div>
+</body>
+</html>
