@@ -45,11 +45,10 @@ async def get_current_user(request: Request):
 #     except Exception as e:
 #         return {"error": str(e)}
 
-async def create_user(email: str, password: str, name: str):
+def create_user(email: str, password: str, name: str) -> dict[str, str]:
     try:
         user = auth.create_user(email=email, password=password, display_name=name)
 
-        # this is required for sending a verification email
         signin_request = {
             "email": email,
             "password": password,
@@ -57,21 +56,17 @@ async def create_user(email: str, password: str, name: str):
         }
         signin_response = requests.post(FIREBASE_SIGNIN_URL, json=signin_request).json()
 
-        id_token = signin_response.get("idToken")  # extract the id token
+        id_token = signin_response.get("idToken")
         if not id_token:
             return {"error": "Failed to get ID token for email verification."}
 
         firebase_email_api = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={FIREBASE_API_KEY}"
         email_request = {
             "requestType": "VERIFY_EMAIL",
-            "idToken": id_token  
+            "idToken": id_token
         }
         email_response = requests.post(firebase_email_api, json=email_request)
 
-        # print("Firebase Sign-in Response:", signin_response)  
-        # print("Firebase Email Response:", email_response.json())
-
-        
         if email_response.status_code == 200:
             return {"status": "User created successfully. Verification email sent."}
         else:
@@ -79,6 +74,7 @@ async def create_user(email: str, password: str, name: str):
 
     except Exception as e:
         return {"error": str(e)}
+
 
 # async def login_user(email: str, password: str):
 #     try:
