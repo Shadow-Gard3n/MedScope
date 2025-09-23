@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drug Side Effect Checker</title>
+    <link rel="stylesheet" href="/static/css/homeStyle.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MediAware</div>
+            <ul>
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="profile.html">Profile</a></li>
+                <li><a href="#">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Know Your Medicine</h1>
+            <p>Enter the name of a drug to check for potential side effects.</p>
+            <form id="drug-search-form">
+                <input type="text" id="drug-name" placeholder="e.g., Paracetamol" required>
+                <button type="submit">Check Side Effects</button>
+            </form>
+        </section>
+
+        <section id="results-section" class="results-container hidden">
+            <h2>Potential Side Effects for <span id="result-drug-name"></span></h2>
+            <div id="side-effects-list">
+                </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 MediAware. All rights reserved.</p>
+    </footer>
+
+    <script src="/static/js/home.js"></script>
+</body>
+</html>

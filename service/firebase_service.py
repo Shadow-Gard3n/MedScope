@@ -14,7 +14,7 @@ import requests
 load_dotenv()
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("D:\\Coding\\web with python\\FastApi\\project\\serviceAccountKey.json")
+    cred = credentials.Certificate("D:\AI ML\AIML Project\serviceAccountKey.json")
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()

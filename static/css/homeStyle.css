@@ -1,0 +1,215 @@
+/* General Body & Font Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    /* Darker background for the body */
+    background-color: #2c3e50; /* A dark slate blue */
+    color: #ecf0f1; /* Light grey for text */
+    line-height: 1.6;
+    /* Subtle medical grid/pattern background */
+    background-image: 
+        linear-gradient(rgba(44, 62, 80, 0.8), rgba(44, 62, 80, 0.8)), /* Dark overlay */
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle fill="%2334495e" cx="10" cy="10" r="1.5"/></svg>'); /* Small, subtle dots */
+    background-size: 20px 20px;
+    background-repeat: repeat;
+}
+
+/* Header and Navigation Bar */
+header {
+    background-color: #34495e; /* Slightly lighter dark blue for header */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    padding: 1rem 5%;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4CAF50; /* A medical green for the logo */
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 1.5rem;
+}
+
+nav a {
+    text-decoration: none;
+    color: #bdc3c7; /* Lighter grey for navigation links */
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+nav a:hover, nav a.active {
+    color: #4CAF50; /* Highlight with medical green */
+}
+
+/* Main Content */
+main {
+    padding: 2rem 5%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Hero Section (Home Page) */
+.hero {
+    text-align: center;
+    padding: 3rem 1rem;
+    background-color: #34495e; /* Dark blue for hero section */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    border: 1px solid #4CAF50; /* Green border */
+}
+
+.hero h1 {
+    margin-bottom: 0.5rem;
+    color: #ecf0f1; /* Light text for headings */
+}
+
+.hero p {
+    color: #bdc3c7; /* Lighter grey for paragraph text */
+}
+
+#drug-search-form {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+#drug-name {
+    width: 300px;
+    padding: 0.75rem;
+    border: 1px solid #4CAF50; /* Green border for input */
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: #2c3e50; /* Dark input background */
+    color: #ecf0f1; /* Light input text */
+}
+
+#drug-name::placeholder {
+    color: #95a5a6; /* Lighter grey placeholder */
+}
+
+button[type="submit"] {
+    padding: 0.75rem 1.5rem;
+    background-color: #4CAF50; /* Medical green button */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+button[type="submit"]:hover {
+    background-color: #43a047; /* Slightly darker green on hover */
+    transform: translateY(-2px);
+}
+
+/* Results Section (Home Page) */
+.results-container {
+    margin-top: 2rem;
+    padding: 2rem;
+    background-color: #34495e; /* Dark blue for results container */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    border: 1px solid #4CAF50; /* Green border */
+}
+
+.results-container.hidden {
+    display: none;
+}
+
+.results-container h2 {
+    color: #4CAF50; /* Green heading for results */
+    margin-bottom: 1rem;
+}
+
+#side-effects-list {
+    list-style-type: disc;
+    padding-left: 20px;
+    color: #ecf0f1; /* Light text for list items */
+}
+
+#side-effects-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* Profile Page */
+.profile-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.profile-card, .search-history {
+    background-color: #34495e; /* Dark blue for profile cards */
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    border: 1px solid #4CAF50; /* Green border */
+}
+
+.profile-card {
+    text-align: center;
+}
+
+.avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+    border: 3px solid #4CAF50; /* Green border around avatar */
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5); /* Green glow */
+}
+
+.profile-card h2 {
+    color: #ecf0f1;
+}
+
+.profile-card p {
+    color: #bdc3c7;
+}
+
+.profile-card p strong {
+    color: #4CAF50; /* Green for strong text like labels */
+}
+
+.search-history h3 {
+    color: #4CAF50; /* Green heading for history */
+    margin-bottom: 1rem;
+}
+
+.search-history ul {
+    list-style: none;
+    padding: 0;
+}
+
+.search-history li {
+    background-color: #2c3e50; /* Darker background for history items */
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    color: #ecf0f1;
+    border-left: 3px solid #4CAF50; /* Green accent bar */
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 1.5rem 5%;
+    margin-top: 2rem;
+    background-color: #34495e; /* Dark blue footer */
+    color: #bdc3c7; /* Lighter grey footer text */
+    font-size: 0.9rem;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+}
