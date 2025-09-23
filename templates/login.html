@@ -106,7 +106,6 @@
             import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 
             const firebaseConfig = {
-            
                 
             };
 
@@ -134,7 +133,7 @@
                     if (data.user_id) {
                         // document.cookie = `session=${data.id_token}; path=/; Secure;`;
                         // successful login
-                        window.location.href = `/user/me`;
+                        window.location.href = `/home/${data.user_id}`;
                     } else {
                         console.error("Login error:", data.error);
                         alert("Login failed: " + data.error);

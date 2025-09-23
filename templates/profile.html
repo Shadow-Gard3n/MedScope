@@ -11,9 +11,9 @@
         <nav>
             <div class="logo">MediAware</div>
             <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="profile.html" class="active">Profile</a></li>
-                <li><a href="#">Logout</a></li>
+                <li><a href="/home/{{ user.uid }}">Home</a></li>
+                <li><a href="/profile/{{ user.uid }}" class="active">Profile</a></li>
+                <li><a href="/logout">Logout</a></li>
             </ul>
         </nav>
     </header>
@@ -22,9 +22,11 @@
         <section class="profile-container">
             <div class="profile-card">
                 <img src="https://via.placeholder.com/100" alt="User Avatar" class="avatar">
-                <h2>Welcome, Alex Doe!</h2>
-                <p><strong>Email:</strong> alex.doe@example.com</p>
-                <p><strong>Member Since:</strong> January 2025</p>
+                <h2>Welcome, {{ user.display_name or 'User' }}!</h2>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                {% if user.creation_timestamp %}
+                <p><strong>Member Since:</strong> {{ user.creation_timestamp.strftime('%B %Y') }}</p>
+                {% endif %}
             </div>
             <div class="search-history">
                 <h3>Your Search History</h3>

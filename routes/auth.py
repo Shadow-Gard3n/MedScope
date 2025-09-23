@@ -62,7 +62,7 @@ async def login(email: str = Form(...), password: str = Form(...)):
     if not session_token:
         return RedirectResponse(url="/login?error=InvalidSession", status_code=303)  # handle missing session token
 
-    response = RedirectResponse(url=f"/user/me", status_code=303)
+    response = RedirectResponse(url=f"/home/{user_id}", status_code=303)
     response.set_cookie(key="session", value=session_token, httponly=True, max_age=604800)  # store session securely
     return response
 
