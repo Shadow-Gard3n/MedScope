@@ -14,7 +14,7 @@ import requests
 load_dotenv()
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("D:\AI ML\AIML Project\serviceAccountKey.json")
+    cred = credentials.Certificate("D:\\Coding\\web with python\\FastApi\\project\\serviceAccountKey.json")
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
@@ -37,18 +37,50 @@ async def get_current_user(request: Request):
         return None
 
 
-# async def create_user(email: str, password: str, name: str):
+# def create_user(email: str, password: str, name: str) -> dict[str, str]:
 #     try:
 #         user = auth.create_user(email=email, password=password, display_name=name)
 
-#         return {"status": "User created successfully. Please verify your email.", "user_id": user.uid}
+#         signin_request = {
+#             "email": email,
+#             "password": password,
+#             "returnSecureToken": True
+#         }
+#         signin_response = requests.post(FIREBASE_SIGNIN_URL, json=signin_request).json()
+
+#         id_token = signin_response.get("idToken")
+#         if not id_token:
+#             return {"error": "Failed to get ID token for email verification."}
+
+#         firebase_email_api = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={FIREBASE_API_KEY}"
+#         email_request = {
+#             "requestType": "VERIFY_EMAIL",
+#             "idToken": id_token
+#         }
+#         email_response = requests.post(firebase_email_api, json=email_request)
+
+#         if email_response.status_code == 200:
+#             return {"status": "User created successfully. Verification email sent."}
+#         else:
+#             return {"error": f"Failed to send verification email: {email_response.json()}"}
+
 #     except Exception as e:
 #         return {"error": str(e)}
 
 def create_user(email: str, password: str, name: str) -> dict[str, str]:
     try:
+        # Step 1: Create the user in Firebase Authentication
         user = auth.create_user(email=email, password=password, display_name=name)
 
+        # Step 2: Save the user's details to the Firestore database
+        user_ref = db.collection("users").document(user.uid)
+        user_ref.set({
+            "user_id": user.uid,
+            "email": email,
+            "name": name
+        })
+
+        # Step 3: Send a verification email (your existing code)
         signin_request = {
             "email": email,
             "password": password,
@@ -74,6 +106,7 @@ def create_user(email: str, password: str, name: str) -> dict[str, str]:
 
     except Exception as e:
         return {"error": str(e)}
+
 
 
 # async def login_user(email: str, password: str):
