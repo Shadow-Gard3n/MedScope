@@ -28,3 +28,6 @@ logs/
 # Ignore system files
 .DS_Store
 Thumbs.db
+
+*.joblib
+
