@@ -5,6 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drug Side Effect Checker</title>
     <link rel="stylesheet" href="/static/css/homeStyle.css">
+    <style>
+        #drug-search-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: left;
+        }
+        #drug-search-form fieldset {
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        #drug-search-form legend {
+            color: #4CAF50;
+            font-weight: bold;
+            padding: 0 0.5rem;
+        }
+        #drug-search-form div {
+            display: flex;
+            flex-direction: column;
+        }
+        #drug-search-form label {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+            margin-bottom: 0.25rem;
+        }
+        #drug-search-form input, #drug-search-form select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        .results-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        .result-box h3 {
+            color: #4CAF50;
+            border-bottom: 1px solid #4CAF50;
+            padding-bottom: 0.5rem;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -21,17 +70,99 @@
     <main>
         <section class="hero">
             <h1>Know Your Medicine</h1>
-            <p>Enter the name of a drug to check for potential side effects.</p>
+            <p>Enter your profile and drug details to check for potential risks and side effects.</p>
+            
             <form id="drug-search-form">
-                <input type="text" id="drug-name" placeholder="e.g., Paracetamol" required>
-                <button type="submit">Check Side Effects</button>
+                
+                <fieldset>
+                    <legend>Your Profile</legend>
+                    <div>
+                        <label for="age_in_years">Age</label>
+                        <input type="number" id="age_in_years" value="59" required>
+                    </div>
+                    <div>
+                        <label for="sex">Sex</label>
+                        <select id="sex">
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                            <option value="UNK" selected>Unknown</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="is_hcp">Are you a Health Professional?</label>
+                        <select id="is_hcp">
+                            <option value="False">No</option>
+                            <option value="True">Yes</option>
+                        </select>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Drug Details</legend>
+                    <div>
+                        <label for="active_chemical">Drug Name (Active Chemical)</label>
+                        <input type="text" id="active_chemical" placeholder="e.g., DIDANOSINE" required>
+                    </div>
+                    <div>
+                        <label for="drug_role">Drug Role</label>
+                        <select id="drug_role">
+                            <option value="PS">Primary Suspect (PS)</option>
+                            <option value="SS">Secondary Suspect (SS)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="route">Route of Administration</label>
+                        <select id="route">
+                            <option value="Oral" selected>Oral</option>
+                            <option value="Unknown">Unknown</option>
+                            <option value="Intravenous (not otherwise specified)">Intravenous</option>
+                            <option value="Subcutaneous">Subcutaneous</option>
+                            <option value="Intramuscular">Intramuscular</option>
+                            <option value="Intravenous drip">Intravenous drip</option>
+                            <option value="Topical">Topical</option>
+                            <option value="Respiratory (inhalation)">Respiratory (inhalation)</option>
+                            <option value="Transdermal">Transdermal</option>
+                            <option value="Transplacental">Transplacental</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="indication_for_use">Reason for Use</label>
+                        <input type="text" id="indication_for_use" placeholder="e.g., Headache" required>
+                    </div>
+                    <div>
+                        <label for="dechallenge">Did reaction stop if drug was stopped?</label>
+                        <select id="dechallenge">
+                            <option value="Unknown" selected>Unknown</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                            <option value="Not applicable">Not applicable</option>
+                        </select>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Location</legend>
+                    <div>
+                        <label for="reporter_country">Your Country (2-letter code, e.g., US)</label>
+                        <input type="text" id="reporter_country" value="US" required>
+                    </div>
+                </fieldset>
+                
+                <button type="submit">Check</button>
             </form>
         </section>
 
         <section id="results-section" class="results-container hidden">
-            <h2>Potential Side Effects for <span id="result-drug-name"></span></h2>
-            <div id="side-effects-list">
-                </div>
+            <div class="result-box">
+                <h3>Predicted Risk Profile</h3>
+                <div id="risk-profile-list"></div>
+            </div>
+            
+            <div class="result-box">
+                <h3>Predicted Side Effects</h3>
+                <div id="side-effects-list"></div>
+            </div>
         </section>
     </main>
 

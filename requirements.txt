@@ -4,3 +4,6 @@ firebase-admin
 jinja2
 dotenv
 python-multipart
+scikit-learn
+pandas
+joblib
