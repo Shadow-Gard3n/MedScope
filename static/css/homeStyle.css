@@ -1,151 +1,302 @@
+/* ===================================================================
+   Global Styles & Variables
+   ================================================================= */
+:root {
+    --bg-deep-dark: #0a192f;
+    --bg-medium-dark: #172a46;
+    --bg-light-dark: #2c3e50;
+    --text-bright: #ccd6f6;
+    --text-normal: #bdc3c7;
+    --text-muted: #8892b0;
+    --accent-primary: #64ffda;
+    --accent-primary-darker: #52d3b4;
+    --accent-primary-text: #0a192f;
+    --border-color: #304a6e;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --card-shadow: 0 10px 30px -15px rgba(2, 12, 27, 0.7);
+}
 
-/* General Body & Font Styles */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+* {
     margin: 0;
-    /* Darker background for the body */
-    background-color: #2c3e50; /* A dark slate blue */
-    color: #ecf0f1; /* Light grey for text */
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-deep-dark);
+    color: var(--text-normal);
     line-height: 1.6;
-    /* Subtle medical grid/pattern background */
-    background-image: 
-        linear-gradient(rgba(44, 62, 80, 0.8), rgba(44, 62, 80, 0.8)), /* Dark overlay */
-        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle fill="%2334495e" cx="10" cy="10" r="1.5"/></svg>'); /* Small, subtle dots */
-    background-size: 20px 20px;
+    font-size: 16px;
+    background-image: linear-gradient(rgba(10, 25, 47, 0.9), rgba(10, 25, 47, 0.9)),
+                      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><path fill="%23172a46" fill-opacity="0.3" d="M0 0 H40 V40 H0 Z M20 0 V40 M0 20 H40"></path></svg>');
+    background-size: 40px 40px;
     background-repeat: repeat;
 }
 
-/* Header and Navigation Bar */
+a {
+    text-decoration: none;
+    color: var(--accent-primary);
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: var(--accent-primary-darker);
+}
+
+/* ===================================================================
+   Header & Navigation
+   ================================================================= */
 header {
-    background-color: #34495e; /* Slightly lighter dark blue for header */
+    background-color: rgba(10, 25, 47, 0.85);
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     padding: 1rem 5%;
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid var(--border-color);
 }
 
 nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .logo {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #4CAF50; /* A medical green for the logo */
+    color: var(--accent-primary);
+    letter-spacing: 1px;
 }
 
 nav ul {
     list-style: none;
-    margin: 0;
-    padding: 0;
     display: flex;
     gap: 1.5rem;
 }
 
 nav a {
-    text-decoration: none;
-    color: #bdc3c7; /* Lighter grey for navigation links */
+    color: var(--text-normal);
     font-weight: 500;
     transition: color 0.3s;
+    padding: 0.5rem 0;
 }
 
 nav a:hover, nav a.active {
-    color: #4CAF50; /* Highlight with medical green */
+    color: var(--accent-primary);
+    border-bottom: 2px solid var(--accent-primary);
 }
 
-/* Main Content */
+/* ===================================================================
+   Main Content & Hero
+   ================================================================= */
 main {
     padding: 2rem 5%;
     max-width: 900px;
-    margin: 0 auto;
+    margin: 2rem auto;
 }
 
-/* Hero Section (Home Page) */
 .hero {
     text-align: center;
-    padding: 3rem 1rem;
-    background-color: #34495e; /* Dark blue for hero section */
+    padding: 2.5rem;
+    background-color: var(--bg-medium-dark);
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    border: 1px solid #4CAF50; /* Green border */
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
 }
 
 .hero h1 {
     margin-bottom: 0.5rem;
-    color: #ecf0f1; /* Light text for headings */
+    color: var(--text-bright);
+    font-size: 2.5rem;
+    font-weight: 600;
 }
 
 .hero p {
-    color: #bdc3c7; /* Lighter grey for paragraph text */
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
 }
 
+/* ===================================================================
+   Prediction Form
+   ================================================================= */
 #drug-search-form {
-    margin-top: 1.5rem;
     display: flex;
-    justify-content: center;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: left;
 }
 
-#drug-name {
-    width: 300px;
+#drug-search-form fieldset {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+}
+
+#drug-search-form legend {
+    color: var(--accent-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 0 0.5rem;
+    margin-left: 0.5rem;
+}
+
+#drug-search-form div {
+    display: flex;
+    flex-direction: column;
+}
+
+#drug-search-form label {
+    font-size: 0.9rem;
+    color: var(--text-normal);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+#drug-search-form input, 
+#drug-search-form select {
+    width: 100%;
     padding: 0.75rem;
-    border: 1px solid #4CAF50; /* Green border for input */
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 1rem;
-    background-color: #2c3e50; /* Dark input background */
-    color: #ecf0f1; /* Light input text */
+    background-color: var(--bg-light-dark);
+    color: var(--text-bright);
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-#drug-name::placeholder {
-    color: #95a5a6; /* Lighter grey placeholder */
+#drug-search-form input:focus, 
+#drug-search-form select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.1);
 }
 
+#drug-search-form input::placeholder {
+    color: var(--text-muted);
+}
+
+/* --- Autocomplete --- */
+.autocomplete-container {
+    position: relative;
+}
+
+.suggestions-box {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--bg-light-dark);
+    border: 1px solid var(--accent-primary);
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.suggestion-item {
+    padding: 10px;
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+    background-color: var(--bg-medium-dark);
+    color: var(--accent-primary);
+}
+
+/* --- Submit Button --- */
 button[type="submit"] {
     padding: 0.75rem 1.5rem;
-    background-color: #4CAF50; /* Medical green button */
-    color: white;
+    background-color: var(--accent-primary);
+    color: var(--accent-primary-text);
     border: none;
     border-radius: 4px;
     font-size: 1rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
     cursor: pointer;
     transition: background-color 0.3s, transform 0.2s;
 }
 
 button[type="submit"]:hover {
-    background-color: #43a047; /* Slightly darker green on hover */
+    background-color: var(--accent-primary-darker);
     transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(100, 255, 218, 0.1);
 }
 
-/* Results Section (Home Page) */
+/* ===================================================================
+   Results Section
+   ================================================================= */
 .results-container {
-    margin-top: 2rem;
-    padding: 2rem;
-    background-color: #34495e; /* Dark blue for results container */
+    display: grid;
+    grid-template-columns: 1fr; /* Default to 1 column */
+    gap: 2rem;
+    margin-top: 2.5rem;
+    padding: 2.5rem;
+    background-color: var(--bg-medium-dark);
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    border: 1px solid #4CAF50; /* Green border */
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+}
+
+/* Use 2 columns on larger screens */
+@media (min-width: 768px) {
+    .results-container {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 .results-container.hidden {
     display: none;
 }
 
-.results-container h2 {
-    color: #4CAF50; /* Green heading for results */
+.result-box h3 {
+    color: var(--accent-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
     margin-bottom: 1rem;
+    font-size: 1.25rem;
 }
 
+#risk-profile-list,
 #side-effects-list {
-    list-style-type: disc;
-    padding-left: 20px;
-    color: #ecf0f1; /* Light text for list items */
+    list-style-type: none;
+    padding-left: 0;
+    color: var(--text-bright);
 }
 
+#risk-profile-list li,
 #side-effects-list li {
     margin-bottom: 0.5rem;
+    position: relative;
+    padding-left: 1.5rem;
 }
 
-/* Profile Page */
+/* Custom bullet point */
+#risk-profile-list li::before,
+#side-effects-list li::before {
+    content: '»';
+    position: absolute;
+    left: 0;
+    color: var(--accent-primary);
+    font-weight: bold;
+}
+
+/* ===================================================================
+   Profile Page Styles (For compatibility with profile.html)
+   ================================================================= */
 .profile-container {
     display: flex;
     flex-direction: column;
@@ -153,11 +304,11 @@ button[type="submit"]:hover {
 }
 
 .profile-card, .search-history {
-    background-color: #34495e; /* Dark blue for profile cards */
-    padding: 2rem;
+    background-color: var(--bg-medium-dark);
+    padding: 2.5rem;
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    border: 1px solid #4CAF50; /* Green border */
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
 }
 
 .profile-card {
@@ -169,25 +320,30 @@ button[type="submit"]:hover {
     height: 100px;
     border-radius: 50%;
     margin-bottom: 1rem;
-    border: 3px solid #4CAF50; /* Green border around avatar */
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5); /* Green glow */
+    border: 3px solid var(--accent-primary);
+    box-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
 }
 
 .profile-card h2 {
-    color: #ecf0f1;
+    color: var(--text-bright);
+    font-size: 1.75rem;
 }
 
 .profile-card p {
-    color: #bdc3c7;
+    color: var(--text-normal);
+    font-size: 1.1rem;
 }
 
 .profile-card p strong {
-    color: #4CAF50; /* Green for strong text like labels */
+    color: var(--accent-primary);
+    font-weight: 500;
 }
 
 .search-history h3 {
-    color: #4CAF50; /* Green heading for history */
+    color: var(--accent-primary);
     margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
 }
 
 .search-history ul {
@@ -196,21 +352,28 @@ button[type="submit"]:hover {
 }
 
 .search-history li {
-    background-color: #2c3e50; /* Darker background for history items */
-    padding: 0.75rem;
+    background-color: var(--bg-light-dark);
+    padding: 0.75rem 1rem;
     border-radius: 4px;
     margin-bottom: 0.5rem;
-    color: #ecf0f1;
-    border-left: 3px solid #4CAF50; /* Green accent bar */
+    color: var(--text-normal);
+    border-left: 4px solid var(--accent-primary);
+    transition: background-color 0.3s;
 }
 
-/* Footer */
+.search-history li:hover {
+    background-color: var(--border-color);
+}
+
+/* ===================================================================
+   Footer
+   ================================================================= */
 footer {
     text-align: center;
-    padding: 1.5rem 5%;
-    margin-top: 2rem;
-    background-color: #34495e; /* Dark blue footer */
-    color: #bdc3c7; /* Lighter grey footer text */
+    padding: 2rem 5%;
+    margin-top: 3rem;
+    background-color: var(--bg-medium-dark);
+    color: var(--text-muted);
     font-size: 0.9rem;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+    border-top: 1px solid var(--border-color);
 }
