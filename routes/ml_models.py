@@ -10,10 +10,10 @@ logging.basicConfig(level=logging.INFO)
 
 MODEL_PATH = "models/"
 try:
-    risk_model = joblib.load(f'{MODEL_PATH}risk_model.joblib')
-    reactions_model = joblib.load(f'{MODEL_PATH}reactions_model.joblib')
-    risk_binarizer = joblib.load(f'{MODEL_PATH}risk_binarizer.joblib')
-    reactions_binarizer = joblib.load(f'{MODEL_PATH}reactions_binarizer.joblib')
+    risk_model = joblib.load(f'{MODEL_PATH}risk_model_3.joblib')
+    reactions_model = joblib.load(f'{MODEL_PATH}reactions_model_3.joblib')
+    risk_binarizer = joblib.load(f'{MODEL_PATH}risk_binarizer_3.joblib')
+    reactions_binarizer = joblib.load(f'{MODEL_PATH}reactions_binarizer_3.joblib')
     logging.info("--- All 4 ML models loaded successfully! ---")
 
 except FileNotFoundError:

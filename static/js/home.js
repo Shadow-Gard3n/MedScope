@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault(); 
             
             // --- 1. Collect all inputs from the new form ---
-            const age_in_years = parseFloat(document.getElementById('age_in_years').value);
+            // MODIFIED: Read age_grp directly, removed age_in_years
+            const age_grp = document.getElementById('age_grp').value;
             const sex = document.getElementById('sex').value;
             const is_hcp = document.getElementById('is_hcp').value === 'True';
             const reporter_country = document.getElementById('reporter_country').value.toUpperCase();
@@ -22,15 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // From our model logic, occr_country is usually the same
             const occr_country = reporter_country;
 
-            // Determine age_grp from age_in_years
-            // (This matches the logic in your data cleaning notebook)
-            let age_grp;
-            if (age_in_years < (1/12)) age_grp = 'Neonate';
-            else if (age_in_years < 2) age_grp = 'Infant';
-            else if (age_in_years < 12) age_grp = 'Child';
-            else if (age_in_years < 18) age_grp = 'Adolescent';
-            else if (age_in_years <= 65) age_grp = 'Adult';
-            else age_grp = 'Elderly';
+            // MODIFIED: Removed the logic that calculated age_grp from age_in_years
 
             // --- 2. Build the drug_profile_joined string ---
             // This MUST match the format from your training notebook
@@ -45,13 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 `${active_chemical}_ROLE_${drug_role}_ROUTE_${route}_IND_${indication}_DECHAL_${dechallenge}`;
 
             // --- 3. Create the JSON payload for the API ---
+            // MODIFIED: Removed age_in_years from the payload
             const data = {
                 age_grp: age_grp,
                 sex: sex,
                 reporter_country: reporter_country,
                 occr_country: occr_country,
                 is_hcp: is_hcp,
-                age_in_years: age_in_years,
                 drug_profile_joined: drug_profile_joined
             };
 

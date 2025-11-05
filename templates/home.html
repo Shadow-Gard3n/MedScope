@@ -77,8 +77,15 @@
                 <fieldset>
                     <legend>Your Profile</legend>
                     <div>
-                        <label for="age_in_years">Age</label>
-                        <input type="number" id="age_in_years" value="59" required>
+                        <label for="age_grp">Age Group</label>
+                        <select id="age_grp" required>
+                            <option value="Neonate">Neonate (0-1 month)</option>
+                            <option value="Infant">Infant (1 month-2 years)</option>
+                            <option value="Child">Child (2-12 years)</option>
+                            <option value="Adolescent">Adolescent (12-18 years)</option>
+                            <option value="Adult" selected>Adult (18-65 years)</option>
+                            <option value="Elderly">Elderly (65+ years)</option>
+                        </select>
                     </div>
                     <div>
                         <label for="sex">Sex</label>
