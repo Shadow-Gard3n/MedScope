@@ -7,5 +7,4 @@ class PredictionInput(BaseModel):
     reporter_country: str
     occr_country: str
     is_hcp: bool
-    age_in_years: float
-    drug_profile_joined: str 
+    drug_profile_joined: str
