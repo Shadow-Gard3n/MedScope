@@ -33,59 +33,69 @@ The project relies on the following key technologies and libraries:
 ## Project Structure
 
 /
-
 ├── main.py                 # Main FastAPI app initialization and routing
-
 ├── requirements.txt        # Python dependencies
-
 ├── .env                    # (Required, not included) For API keys
-
 ├── serviceAccountKey.json  # (Required, not included) Firebase admin credentials
-
 |
-
-├── models/                 # (Required, not included)
-
+├── models/                 # (Required, not included) ML models and data
 │   ├── risk_model_3.joblib
-
 │   ├── reactions_model_3.joblib
-
 │   ├── risk_binarizer_3.joblib
-
 │   ├── reactions_binarizer_3.joblib
-
 │   └── alternative_medicine.json
-
 |
-
 ├── routes/
-
-│   ├── auth.py             # (Inferred) User authentication routes (login, signup)
-
-│   ├── user.py             # (Inferred) User profile routes
-
+│   ├── auth.py             # User authentication routes (login, signup)
+│   ├── user.py             # User profile routes
 │   ├── ml_models.py        # API endpoints for predictions and alternatives
-
 │   └── chat.py             # API endpoint for the AI chatbot
-
 |
-
 ├── schemas/
-
-│   └── model.py            # Pydantic models for API request bodies
-
+│   ├── model.py            # Pydantic models for API request bodies
+│   └── user.py             # Pydantic models for user data
 |
-
 ├── service/
-
 │   └── firebase_service.py # Logic for Firebase auth and database
-
 |
-
-├── static/                 # (Inferred) CSS, JS, and image files
-
-└── templates/              # (Inferred) Jinja2 HTML templates
-
+├── static/                 # CSS, JS, and JSON files for frontend
+│   ├── css/
+│   │   ├── alternativesStyle.css
+│   │   ├── chatStyle.css
+│   │   ├── homeStyle.css
+│   │   ├── loginStyle.css
+│   │   └── signupStyle.css
+│   └── js/
+│       ├── active_chemicals.json
+│       ├── alternatives.js
+│       ├── alternatives_drugs.json
+│       ├── alternatives_indications.json
+│       ├── chat.js
+│       ├── countries.json
+│       ├── home.js
+│       ├── indications.json
+│       └── routes.json
+|
+├── templates/              # Jinja2 HTML templates
+│   ├── 404.html
+│   ├── alternatives.html
+│   ├── chat.html
+│   ├── home.html
+│   ├── login.html
+│   ├── profile.html
+│   └── signup.html
+|
+├── notebooks/              # Jupyter notebooks for data processing and model training
+│   ├── Alternate_Medicine.ipynb
+│   ├── Data-to-Json.ipynb
+│   ├── Data_Cleaning_faers.ipynb
+│   ├── Data_Visualization.ipynb
+|   ├── Model_Training.ipynb
+│   ├── Model_Training_2.ipynb
+│   └── Model_Training_3.ipynb
+|
+├── .gitattributes
+└── .gitignore
 
 
 ## Setup and Installation
