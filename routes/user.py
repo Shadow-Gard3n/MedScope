@@ -99,3 +99,25 @@ async def get_alternatives_page(request: Request, user_id: str, current_user: st
         return templates.TemplateResponse("alternatives.html", {"request": request, "user": user})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# @router.get("/chat/{user_id}", response_class=HTMLResponse)
+# async def get_chat_page(request: Request, user_id: str):
+#     # Verify user exists (optional but recommended)
+#     try:
+#         user = auth.get_user(user_id)
+#     except auth.UserNotFoundError:
+#          raise HTTPException(status_code=404, detail="User not found")
+         
+#     return templates.TemplateResponse("chat.html", {"request": request, "user": user})
+
+@router.get("/chat/{user_id}", response_class=HTMLResponse)
+async def get_chat_page(request: Request, user_id: str, current_user: str = Depends(get_current_user)):
+    if current_user is None or current_user != user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        user = auth.get_user(current_user)
+        return templates.TemplateResponse("chat.html", {"request": request, "user": user})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
