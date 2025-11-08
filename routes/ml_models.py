@@ -4,9 +4,12 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import logging
 from schemas.model import PredictionInput
+from schemas.model import AlternativesInput, SearchAlternativesInput
+import json
 from service.firebase_service import db, get_current_user
 from firebase_admin import firestore
 import logging
+from collections import defaultdict
 
 router = APIRouter()
 logging.basicConfig(level=logging.INFO)
@@ -64,3 +67,77 @@ async def predict_all(data: PredictionInput, current_user: str = Depends(get_cur
         "risk_profile": risk_labels[0],
         "side_effects": reaction_labels[0]
     }
+
+
+
+ALTERNATIVES_FILE_PATH = "models/alternative_medicine.json" # Make sure this path is correct
+try:
+    with open(ALTERNATIVES_FILE_PATH, 'r') as f:
+        alternatives_data = json.load(f)
+    logging.info(f"--- Alternatives lookup file loaded successfully! ({ALTERNATIVES_FILE_PATH}) ---")
+except FileNotFoundError:
+    logging.error(f"--- ERROR: {ALTERNATIVES_FILE_PATH} not found. Alternatives will not work. ---")
+    alternatives_data = {}
+
+@router.post("/alternatives")
+async def get_alternatives(data: AlternativesInput, current_user: str = Depends(get_current_user)):
+    """
+    Finds alternative drugs for a given indication that do NOT have
+    the specified side effects, using fuzzy matching.
+    """
+    if not alternatives_data:
+         raise HTTPException(status_code=500, detail="Alternatives data is not loaded.")
+
+    indication_key = data.indication.strip().lower()
+    
+    original_drug_key = data.original_drug_name.strip().lower()
+
+    avoid_effects_set = {effect.strip().lower() for effect in data.avoid_side_effects}
+
+    # 2. Find all drugs for the indication
+    potential_drugs = alternatives_data.get(indication_key, [])
+    
+    if not potential_drugs:
+        return {"indication": data.indication, "alternatives": []}
+
+    # 3. Filter the list with new "fuzzy" logic
+    good_alternatives = []
+    for drug in potential_drugs:
+        drug_name = drug['name']
+        drug_name_lower = drug_name.lower()
+        drug_effects_list = drug['effects'] # This is already lowercase from your notebook
+
+        # --- NEW FILTER 1: Check if it's just the same drug ---
+        # If the original drug name is *in* this drug's name, skip it.
+        # e.g., if original is "augmentin", skip "augmentin 1000 duo tablet"
+        if original_drug_key and original_drug_key in drug_name_lower:
+            continue  # Skip this, it's not a true alternative
+
+        # --- NEW FILTER 2: Fuzzy Side Effect Check ---
+        found_bad_effect = False
+        for avoid_effect in avoid_effects_set: # e.g., "pain"
+            if not avoid_effect:
+                continue
+
+            # Check if our simple "bad" effect (e.g., "pain")
+            # is *contained within* any of the complex effect strings
+            # e.g., "pain" IN "injection site reactions (pain, swelling, redness)"
+            for complex_effect in drug_effects_list:
+                if avoid_effect in complex_effect:
+                    found_bad_effect = True
+                    break # Found a bad effect, stop checking this drug's effects
+            
+            if found_bad_effect:
+                break # Stop checking this drug, move to the next one
+
+        # If, after all checks, we found no bad effects, add it to the list
+        if not found_bad_effect:
+            good_alternatives.append(drug_name)
+
+    # Return the list of safe alternatives (remove duplicates)
+    return {
+        "indication": data.indication,
+        "alternatives": list(set(good_alternatives))
+    }
+
+
