@@ -6,7 +6,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function appendMessage(text, sender) {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
-        msgDiv.textContent = text;
+        // msgDiv.textContent = text;
+
+        if (sender === 'bot') {
+            // Renders HTML tags like <b> and <ul>
+            msgDiv.innerHTML = text;
+        } else {
+            // Keeps user input safe as plain text
+            msgDiv.textContent = text;
+        }
         chatWindow.appendChild(msgDiv);
         chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll to bottom
     }

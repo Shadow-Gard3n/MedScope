@@ -159,42 +159,112 @@ async def get_alternatives_search(data: SearchAlternativesInput, current_user: s
 
 
 # --- INTERNAL HELPER FUNCTIONS FOR CHATBOT ---
-def internal_predict(drug_name: str) -> str:
-    """
-    Predicts risks and side effects for a given drug name using default patient values.
-    """
-    # Clean up the input name
-    drug_clean = drug_name.strip().upper()
+# def internal_predict(drug_name: str) -> str:
+#     """
+#     Predicts risks and side effects for a given drug name using default patient values.
+#     """
+#     # Clean up the input name
+#     drug_clean = drug_name.strip().upper()
     
-    # Create a dummy input with 'average' defaults
-    dummy_input = {
-        "age_grp": "Adult",
-        "sex": "UNK",
-        "reporter_country": "US",
-        "occr_country": "US",
-        "is_hcp": False,
-        "drug_profile_joined": f"{drug_clean}_ROLE_PS_ROUTE_Oral_IND_Unknown_DECHAL_Unknown"
-    }
+#     # Create a dummy input with 'average' defaults
+#     dummy_input = {
+#         "age_grp": "Adult",
+#         "sex": "UNK",
+#         "reporter_country": "US",
+#         "occr_country": "US",
+#         "is_hcp": False,
+#         "drug_profile_joined": f"{drug_clean}_ROLE_PS_ROUTE_Oral_IND_Unknown_DECHAL_Unknown"
+#     }
 
-    try:
-        sample_df = pd.DataFrame([dummy_input])
+#     try:
+#         sample_df = pd.DataFrame([dummy_input])
         
-        # Run predictions
+#         # Run predictions
+#         risk_pred = risk_model.predict(sample_df)
+#         risk_labels = risk_binarizer.inverse_transform(risk_pred)[0]
+        
+#         reaction_pred = reactions_model.predict(sample_df)
+#         reaction_labels = reactions_binarizer.inverse_transform(reaction_pred)[0]
+
+#         # Format the output for the chat
+#         risk_str = ", ".join(risk_labels) if risk_labels else "None predicted"
+#         effects_str = ", ".join(reaction_labels) if reaction_labels else "None common predicted"
+        
+#         return f"For {drug_clean} (assuming typical adult use): Predicted Risks: {risk_str}. Potential Side Effects: {effects_str}."
+
+#     except Exception as e:
+#         logging.error(f"Internal predict error for {drug_name}: {e}")
+#         return f"Sorry, I couldn't run the prediction model for '{drug_name}'. Please try the full form on the home page."
+
+
+
+# In routes/ml_models.py
+
+def internal_predict(drug_name: str, age_grp: str = "Adult", sex: str = "UNK", country: str = "COUNTRY NOT SPECIFIED", route: str = "Unknown", indication: str = "Unknown") -> str:
+    """
+    Predicts risks and side effects using ML, AND looks up reported effects from the database.
+    """
+    drug_clean = drug_name.strip().upper()
+    drug_key = drug_name.strip().lower()
+    
+    # --- 1. ML PREDICTION ---
+    sex_clean = sex.upper() if sex.upper() in ['M', 'F'] else 'UNK'
+    age_clean = age_grp.capitalize() if age_grp.capitalize() in ['Neonate', 'Infant', 'Child', 'Adolescent', 'Adult', 'Elderly'] else 'Adult'
+    route_clean = route.strip() if route else "Unknown"
+    ind_clean = indication.strip() if indication else "Unknown"
+
+    input_data = {
+        "age_grp": age_clean,
+        "sex": sex_clean,
+        "reporter_country": country.upper(),
+        "occr_country": country.upper(),
+        "is_hcp": False,
+        "drug_profile_joined": f"{drug_clean}_ROLE_PS_ROUTE_{route_clean}_IND_{ind_clean}_DECHAL_Unknown"
+    }
+    
+    ml_output = ""
+    try:
+        sample_df = pd.DataFrame([input_data])
         risk_pred = risk_model.predict(sample_df)
+        # inverse_transform returns a list of tuples, e.g. [('nausea', 'headache')]
+        # So [0] gives us the tuple ('nausea', 'headache')
         risk_labels = risk_binarizer.inverse_transform(risk_pred)[0]
         
         reaction_pred = reactions_model.predict(sample_df)
         reaction_labels = reactions_binarizer.inverse_transform(reaction_pred)[0]
 
-        # Format the output for the chat
-        risk_str = ", ".join(risk_labels) if risk_labels else "None predicted"
-        effects_str = ", ".join(reaction_labels) if reaction_labels else "None common predicted"
+        # --- FIX IS HERE: Use len() instead of .size ---
+        risk_str = ", ".join(risk_labels) if len(risk_labels) > 0 else "None specifically predicted"
+        effects_str = ", ".join(reaction_labels) if len(reaction_labels) > 0 else "None specifically predicted"
+        # ----------------------------------------------
         
-        return f"For {drug_clean} (assuming typical adult use): Predicted Risks: {risk_str}. Potential Side Effects: {effects_str}."
+        ml_output = (f"<li><b>AI Predicted Risks (for this profile):</b> {risk_str}</li>"
+                     f"<li><b>AI Predicted Side Effects (for this profile):</b> {effects_str}</li>")
 
     except Exception as e:
-        logging.error(f"Internal predict error for {drug_name}: {e}")
-        return f"Sorry, I couldn't run the prediction model for '{drug_name}'. Please try the full form on the home page."
+        logging.error(f"Internal predict ML error for {drug_name}: {e}")
+        ml_output = "<li><b>AI Prediction:</b> Could not run for this specific profile.</li>"
+
+    # --- 2. DATABASE LOOKUP ---
+    db_output = ""
+    drug_info = drug_lookup.get(drug_key)
+    if drug_info and drug_info.get('effects'):
+        db_effects = drug_info['effects'][:10]
+        db_effects_str = ", ".join(db_effects)
+        remaining = len(drug_info['effects']) - 10
+        if remaining > 0:
+            db_effects_str += f", and {remaining} more..."
+            
+        db_output = f"<li><b>General Reported Side Effects (from Database):</b> {db_effects_str}</li>"
+    else:
+        db_output = f"<li><b>Database:</b> No general side effects found for '{drug_clean}'.</li>"
+
+    # --- 3. COMBINE OUTPUTS ---
+    return (f"For <b>{drug_clean}</b> (Profile: {age_clean}, {sex_clean}, {country.upper()}):\n"
+            f"<ul>"
+            f"{ml_output}"
+            f"{db_output}"
+            f"</ul>")
 
 
 def internal_alternatives(query: str) -> str:
