@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediAware Assistant</title>
+    <link rel="stylesheet" href="/static/css/chatStyle.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MediAware</div>
+            <ul>
+                <li><a href="/home/{{ user.uid }}">Home</a></li>
+                <li><a href="/alternatives/{{ user.uid }}">Alternatives</a></li>
+                <li><a href="/chat/{{ user.uid }}" class="active">Assistant</a></li>
+                <li><a href="/profile/{{ user.uid }}">Profile</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="chat-container">
+            <div class="chat-header">
+                <h1>MediAware Assistant</h1>
+                <p>Ask me about drug side effects or alternative medicines.</p>
+            </div>
+            
+            <div id="chat-window" class="chat-window">
+                <!-- Messages will appear here -->
+                <div class="message bot-message">
+                    Hello! I'm your medical assistant. How can I help you today?
+                </div>
+            </div>
+
+            <form id="chat-form" class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Type your question here..." required autocomplete="off">
+                <button type="submit">
+                    <!-- Simple SVG Send Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                      <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                    </svg>
+                </button>
+            </form>
+        </section>
+    </main>
+
+    <script src="/static/js/chat.js"></script>
+</body>
+</html>

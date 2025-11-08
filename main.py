@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 from routes import auth
 from routes import user
 from routes import ml_models
+from routes import chat
 import logging
 logging.basicConfig(level=logging.INFO)
 
@@ -17,6 +18,7 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(ml_models.router)
+app.include_router(chat.router)
 
 @app.exception_handler(StarletteHTTPException)
 async def custom_404_handler(request: Request, exc: StarletteHTTPException):

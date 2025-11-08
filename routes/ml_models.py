@@ -152,3 +152,76 @@ async def get_alternatives_search(data: SearchAlternativesInput, current_user: s
         results["alternatives"] = alternatives_data.get(ind_key, [])
 
     return results
+
+
+
+
+
+
+# --- INTERNAL HELPER FUNCTIONS FOR CHATBOT ---
+def internal_predict(drug_name: str) -> str:
+    """
+    Predicts risks and side effects for a given drug name using default patient values.
+    """
+    # Clean up the input name
+    drug_clean = drug_name.strip().upper()
+    
+    # Create a dummy input with 'average' defaults
+    dummy_input = {
+        "age_grp": "Adult",
+        "sex": "UNK",
+        "reporter_country": "US",
+        "occr_country": "US",
+        "is_hcp": False,
+        "drug_profile_joined": f"{drug_clean}_ROLE_PS_ROUTE_Oral_IND_Unknown_DECHAL_Unknown"
+    }
+
+    try:
+        sample_df = pd.DataFrame([dummy_input])
+        
+        # Run predictions
+        risk_pred = risk_model.predict(sample_df)
+        risk_labels = risk_binarizer.inverse_transform(risk_pred)[0]
+        
+        reaction_pred = reactions_model.predict(sample_df)
+        reaction_labels = reactions_binarizer.inverse_transform(reaction_pred)[0]
+
+        # Format the output for the chat
+        risk_str = ", ".join(risk_labels) if risk_labels else "None predicted"
+        effects_str = ", ".join(reaction_labels) if reaction_labels else "None common predicted"
+        
+        return f"For {drug_clean} (assuming typical adult use): Predicted Risks: {risk_str}. Potential Side Effects: {effects_str}."
+
+    except Exception as e:
+        logging.error(f"Internal predict error for {drug_name}: {e}")
+        return f"Sorry, I couldn't run the prediction model for '{drug_name}'. Please try the full form on the home page."
+
+
+def internal_alternatives(query: str) -> str:
+    """
+    Finds alternatives for a drug or indication.
+    """
+    query_lower = query.strip().lower()
+    
+    # 1. Try as a DRUG name first
+    drug_info = drug_lookup.get(query_lower)
+    if drug_info:
+        # It's a drug! Find its primary indication.
+        if drug_info["indications"]:
+            indication = drug_info["indications"][0]
+            # Find other drugs for this indication
+            alts = alternatives_data.get(indication, [])
+            # Filter out the original drug and take top 3
+            alt_names = [d['name'] for d in alts if d['name'].lower() != query_lower][:3]
+            
+            if alt_names:
+                return f"'{query}' is often used for {indication}. Some possible alternatives are: {', '.join(alt_names)}."
+            return f"'{query}' is used for {indication}, but I don't have other alternatives listed for that."
+        return f"I found '{query}' in my database, but I don't have a clear indication listed to find alternatives."
+
+    alts = alternatives_data.get(query_lower)
+    if alts:
+        alt_names = [d['name'] for d in alts][:3]
+        return f"Common medicines for '{query}': {', '.join(alt_names)}."
+
+    return f"I couldn't find any information for '{query}' as either a drug or a medical condition."
