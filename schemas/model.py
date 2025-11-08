@@ -19,3 +19,7 @@ class AvoidAlternativesInput(BaseModel):
 class SearchAlternativesInput(BaseModel):
     drug_name: str = ""
     indication: str = ""
+
+
+class ChatInput(BaseModel):
+    message: str
