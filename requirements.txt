@@ -7,3 +7,5 @@ python-multipart
 scikit-learn
 pandas
 joblib
+requests
+google-generativeai

@@ -120,6 +120,7 @@ RULES:
 """
 
 
+
 @router.post("/chat")
 async def chat_with_bot(data: ChatInput, current_user: str = Depends(get_current_user)):
     user_msg = data.message.strip()
@@ -128,6 +129,7 @@ async def chat_with_bot(data: ChatInput, current_user: str = Depends(get_current
         # Step 1: Ask Gemini if it needs a tool
         response1 = model.generate_content(f"System: {TOOLS_PROMPT}\nUser: {user_msg}")
         text1 = response1.text.strip()
+        logging.info(f"Gemini Raw Response 1: {text1}")
 
         # Step 2: Try to parse as JSON
         tool_data = None
@@ -146,9 +148,13 @@ async def chat_with_bot(data: ChatInput, current_user: str = Depends(get_current
             arg = tool_data["arg"]
             raw_data = ""
             
-            if tool_name == "predict_side_effects" or tool_name == "predict":
-                logging.info(f"Running tool: predict for {arg}")
-                raw_data = internal_predict(arg)
+            if tool_name == "predict_side_effects":
+                drug_name = arg
+                if not drug_name:
+                    raw_data = "Error: You asked for side effects but didn't specify a drug."
+                else:
+                    logging.info(f"Running tool: predict for {arg}")
+                    raw_data = internal_predict(arg)
             elif tool_name == "find_alternatives" or tool_name == "alternatives":
                 logging.info(f"Running tool: alternatives for {arg}")
                 raw_data = internal_alternatives(arg)
@@ -173,3 +179,6 @@ async def chat_with_bot(data: ChatInput, current_user: str = Depends(get_current
         traceback.print_exc()
         logging.error(f"Chat error: {e}")
         return {"response": "I'm having a little trouble right now. Please try again."}
+
+
+
