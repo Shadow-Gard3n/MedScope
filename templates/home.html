@@ -12,6 +12,7 @@
             <div class="logo">MediAware</div>
             <ul>
                 <li><a href="/home/{{ user.uid }}" class="active">Home</a></li>
+                <li><a href="/alternatives/{{ user.uid }}">Alternatives</a></li>
                 <li><a href="/profile/{{ user.uid }}">Profile</a></li>
                 <li><a href="/logout">Logout</a></li>
             </ul>
@@ -120,6 +121,12 @@
             <div class="result-box">
                 <h3>Predicted Side Effects</h3>
                 <div id="side-effects-list"></div>
+            </div>
+
+            <div class="result-box" id="alternatives-box" style="display: none;">
+                <h3>Possible Alternatives</h3>
+                <p>For <strong id="alt-indication"></strong>, but without the predicted side effects:</p>
+                <div id="alternatives-list"></div>
             </div>
         </section>
     </main>

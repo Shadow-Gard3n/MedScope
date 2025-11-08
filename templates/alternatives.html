@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drug Alternatives - MediAware</title>
+    <link rel="stylesheet" href="/static/css/alternativesStyle.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MediAware</div>
+            <ul>
+                <li><a href="/home/{{ user.uid }}">Home</a></li>
+                <li><a href="/alternatives/{{ user.uid }}" class="active">Alternatives</a></li>
+                <li><a href="/profile/{{ user.uid }}">Profile</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Find Medicines & Alternatives</h1>
+            <p>Search by a drug name to see its side effects and alternatives, OR search by a medical condition to see all available options.</p>
+            
+            <div class="search-container">
+                <!-- FORM 1: Search by Drug -->
+                <form id="drug-search-form" class="search-form">
+                    <h2>Search by Drug Name</h2>
+                    <div class="form-group autocomplete-container">
+                        <input type="text" id="search-drug" placeholder="e.g., Amoxicillin" required autocomplete="off">
+                        <div class="suggestions-box" id="drug_suggestions"></div>
+                    </div>
+                    <button type="submit">Find Alternatives</button>
+                </form>
+
+                <div class="or-divider">OR</div>
+
+                <!-- FORM 2: Search by Indication -->
+                <form id="indication-search-form" class="search-form">
+                    <h2>Search by Condition</h2>
+                    <div class="form-group autocomplete-container">
+                        <input type="text" id="search-indication" placeholder="e.g., Bacterial Infection" required autocomplete="off">
+                        <div class="suggestions-box" id="indication_suggestions"></div>
+                    </div>
+                    <button type="submit">See All Medicines</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="results-section" class="hidden">
+            <!-- Area for Primary Drug Info (only shown if searched by drug) -->
+            <div id="primary-drug-info" class="hidden">
+                <h2>Selected Drug</h2>
+                <div id="primary-drug-card" class="drug-card primary">
+                    <!-- Populated by JS -->
+                </div>
+                <h3>Alternatives for <span id="primary-drug-indication"></span>:</h3>
+            </div>
+
+            <!-- Area for Alternatives List -->
+            <h2 id="alternatives-title">Available Medicines</h2>
+            <div id="alternatives-list" class="results-grid">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 MediAware. All rights reserved.</p>
+    </footer>
+
+    <script src="/static/js/alternatives.js"></script>
+</body>
+</html>

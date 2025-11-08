@@ -76,3 +76,26 @@ async def get_user_profile(request: Request, user_id: str, current_user: str = D
         return templates.TemplateResponse("profile.html", {"request": request, "user": user_data})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+# @router.get("/alternatives/{user_id}", response_class=HTMLResponse)
+# async def get_alternatives_page(request: Request, user_id: str):
+#     # Verify user exists (optional but good practice)
+#     try:
+#         user = auth.get_user(user_id)
+#     except auth.UserNotFoundError:
+#         raise HTTPException(status_code=404, detail="User not found")
+
+#     return templates.TemplateResponse("alternatives.html", {"request": request, "user": user})
+
+
+@router.get("/alternatives/{user_id}", response_class=HTMLResponse)
+async def get_alternatives_page(request: Request, user_id: str, current_user: str = Depends(get_current_user)):
+    if current_user is None or current_user != user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        user = auth.get_user(current_user)
+        return templates.TemplateResponse("alternatives.html", {"request": request, "user": user})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
