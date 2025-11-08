@@ -31,7 +31,7 @@ The project relies on the following key technologies and libraries:
 * **HTTP Client**: `requests`
 
 ## Project Structure
-
+```
 /
 ├── main.py                 # Main FastAPI app initialization and routing
 ├── requirements.txt        # Python dependencies
@@ -96,7 +96,7 @@ The project relies on the following key technologies and libraries:
 |
 ├── .gitattributes
 └── .gitignore
-
+```
 
 ## Setup and Installation
 
