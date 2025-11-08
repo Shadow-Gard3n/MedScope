@@ -187,3 +187,37 @@ main {
     width: 24px;
     height: 24px;
 }
+
+
+
+/* --- Chat Message Content Styling --- */
+
+/* Ensure list markers are visible */
+.bot-message ul, .bot-message ol {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+    padding-left: 25px !important;
+    list-style-type: disc !important; /* Forces bullet points */
+    display: block !important;
+}
+
+.bot-message li {
+    margin-bottom: 4px !important;
+    display: list-item !important; /* Ensures it behaves like a list item */
+}
+
+/* Styling for bold text */
+.bot-message b, .bot-message strong {
+    color: var(--accent-primary);
+    font-weight: 700;
+}
+
+/* Styling for the disclaimer */
+.bot-message i {
+    opacity: 0.8;
+    font-size: 0.9em;
+    display: block;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
