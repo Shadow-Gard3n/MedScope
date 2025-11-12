@@ -2,6 +2,17 @@
 
 MedScope is a Python-based backend service built with FastAPI. It provides a suite of tools for medical information, including ML-powered drug risk prediction, a drug alternatives finder, and an intelligent chatbot powered by Google's Gemini AI. User management and data storage are handled by Firebase.
 
+
+## Data Sources
+
+The machine learning models were trained on data derived from the following public datasets. The processing and training steps can be reviewed in the `notebooks/` directory.
+
+* **FDA Adverse Event Reporting System (FAERS)**:
+    * [FAERS on Kaggle (2020 Data)](https://www.kaggle.com/datasets/stpeteishii/faers2020/data)
+    * [FDA FAERS Public Dashboard](https://fis.fda.gov/extensions/FPD-QDE-FAERS/FPD-QDE-FAERS.html)
+* **Medicine Usage and Substitutes**:
+    * [250k+ Medicines on Kaggle](https://www.kaggle.com/datasets/shudhanshusingh/250k-medicines-usage-side-effects-and-substitutes)
+
 ## Core Features
 
 * **ML Side Effect Prediction**: Utilizes pre-trained `scikit-learn` models to predict potential drug risk profiles and side effects based on a user's demographic and drug details.
