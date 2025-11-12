@@ -14,7 +14,11 @@ import requests
 load_dotenv()
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("D:\\Coding\\web with python\\FastApi\\project\\serviceAccountKey.json")
+    key_path = os.getenv("SERVICE_ACCOUNT_KEY_PATH")
+    
+    if not key_path:
+        raise ValueError("SERVICE_ACCOUNT_KEY_PATH environment variable not set.")
+    cred = credentials.Certificate(key_path)
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()

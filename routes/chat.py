@@ -174,6 +174,7 @@ async def chat_with_bot(data: ChatInput, current_user: str = Depends(get_current
 
         # If no tool was needed, just return Gemini's first response
         return {"response": text1}
+        # return text1
 
     except Exception as e:
         traceback.print_exc()
