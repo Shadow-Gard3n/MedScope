@@ -226,17 +226,14 @@ def internal_predict(drug_name: str, age_grp: str = "Adult", sex: str = "UNK", c
     try:
         sample_df = pd.DataFrame([input_data])
         risk_pred = risk_model.predict(sample_df)
-        # inverse_transform returns a list of tuples, e.g. [('nausea', 'headache')]
-        # So [0] gives us the tuple ('nausea', 'headache')
+        
         risk_labels = risk_binarizer.inverse_transform(risk_pred)[0]
         
         reaction_pred = reactions_model.predict(sample_df)
         reaction_labels = reactions_binarizer.inverse_transform(reaction_pred)[0]
 
-        # --- FIX IS HERE: Use len() instead of .size ---
         risk_str = ", ".join(risk_labels) if len(risk_labels) > 0 else "None specifically predicted"
         effects_str = ", ".join(reaction_labels) if len(reaction_labels) > 0 else "None specifically predicted"
-        # ----------------------------------------------
         
         ml_output = (f"<li><b>AI Predicted Risks (for this profile):</b> {risk_str}</li>"
                      f"<li><b>AI Predicted Side Effects (for this profile):</b> {effects_str}</li>")
