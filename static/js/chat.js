@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const data = await response.json();
-                appendMessage(data.response['answer'], 'bot');
+                appendMessage(data['response'], 'bot');
             } else {
                 appendMessage("Sorry, I'm having trouble connecting right now. Please try again.", 'bot');
             }
