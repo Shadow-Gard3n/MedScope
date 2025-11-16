@@ -114,6 +114,7 @@ TOOLS:
 RULES:
 - If the user asks about a condition, symptom, or what medicine to take, ALWAYS call {"tool": "find_alternatives", "arg": "<condition>"}.
 - If the user asks about side effects, safety, or risks of a drug, ALWAYS call {"tool": "predict_side_effects", "arg": "<drug_name>"}.
+- If the user asks questions not related to the tools {"response":"<your_answer_here>"}
 - DO NOT answer directly in text when a tool is needed.
 - When no tool is needed (e.g. greetings or general advice), reply normally.
 - The entire response must be ONLY the JSON object, nothing else.
@@ -170,11 +171,12 @@ async def chat_with_bot(data: ChatInput, current_user: str = Depends(get_current
             )
             
             response2 = model.generate_content(final_prompt)
+            print(response2.text)
             return {"response": response2.text.strip()}
 
-        # If no tool was needed, just return Gemini's first response
-        return {"response": text1}
-        # return text1
+        print(text1)
+        normal_data = json.loads(text1)
+        return {"response": normal_data['response']}
 
     except Exception as e:
         traceback.print_exc()
