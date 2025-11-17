@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/assistantStyle.css">
+
+    
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MedScope</div>
+            <ul>
+                <li><a href="/home/{{ user.uid }}">Home</a></li>
+                <li><a href="/assistant/{{ user.uid }}" class="active">Assistant</a></li>
+                <li><a href="/alternatives/{{ user.uid }}" >Alternatives</a></li>
+                <li><a href="/chat/{{ user.uid }}">Chatbot</a></li>
+                <li><a href="/profile/{{ user.uid }}">Profile</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Top Section: Insights -->
+        <div class="insight-grid">
+            <!-- Diagnosis Column -->
+            <div class="card diagnosis-card">
+                <h3><i class="fa-solid fa-stethoscope"></i> Potential Diagnosis</h3>
+                <div id="diagnosisOutput" class="card-content">
+                    Waiting for consultation data...
+                </div>
+            </div>
+
+            <!-- Questions Column -->
+            <div class="card questions-card">
+                <h3><i class="fa-solid fa-circle-question"></i> Suggested Questions</h3>
+                <div id="questionsOutput" class="card-content">
+                    Waiting for consultation data...
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Section: Conversation -->
+        <div class="card conversation-section">
+            <h3><i class="fa-solid fa-comments"></i> Live Consultation</h3>
+            <div id="conversationLog" class="conversation-log">
+                <!-- Text will be injected here -->
+            </div>
+            <div class="controls">
+                <div class="status-indicator">
+                    <div id="micStatus" class="pulse"></div>
+                    <span id="statusText">Ready to start</span>
+                </div>
+                <div class="btn-group">
+                    <button id="btnRestart" class="btn btn-restart">
+                        <i class="fa-solid fa-microphone"></i> Start / Restart
+                    </button>
+                    <button id="btnFinish" class="btn btn-finish">
+                        <i class="fa-solid fa-stop"></i> Finish
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- CONFIGURATION ---
+        const API_URL = "http://127.0.0.1:8000/process-conversation"; // Update if your FastAPI port differs
+        
+        // --- DOM ELEMENTS ---
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const btnRestart = document.getElementById('btnRestart');
+        const btnFinish = document.getElementById('btnFinish');
+        const conversationLog = document.getElementById('conversationLog');
+        const diagnosisOutput = document.getElementById('diagnosisOutput');
+        const questionsOutput = document.getElementById('questionsOutput');
+        const micStatus = document.getElementById('micStatus');
+        const statusText = document.getElementById('statusText');
+
+        // --- STATE ---
+        let isListening = false;
+        let conversationHistory = "";
+        let recognition;
+
+        // --- 1. DARK MODE LOGIC ---
+        darkModeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+
+        // --- 2. SPEECH RECOGNITION SETUP ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true; // Keep listening until stopped
+            recognition.interimResults = false; // Only show final results
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                micStatus.classList.add('active');
+                statusText.textContent = "Listening to conversation...";
+                statusText.style.color = "var(--primary)";
+            };
+
+            recognition.onend = () => {
+                // Auto-restart if we think we should still be listening
+                if (isListening) {
+                    recognition.start();
+                } else {
+                    micStatus.classList.remove('active');
+                    statusText.textContent = "Session Paused";
+                    statusText.style.color = "var(--text-muted)";
+                }
+            };
+
+            recognition.onresult = (event) => {
+                const current = event.resultIndex;
+                const transcript = event.results[current][0].transcript.trim();
+                
+                if(transcript) {
+                    handleNewSpeech(transcript);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech Error:", event.error);
+                if(event.error === 'not-allowed') {
+                    alert("Microphone access denied. Please allow permissions.");
+                    isListening = false;
+                }
+            };
+        } else {
+            alert("Your browser does not support Speech Recognition. Please use Chrome or Edge.");
+            btnRestart.disabled = true;
+        }
+
+        // --- 3. CORE LOGIC ---
+
+        // Handle Button Clicks
+        btnRestart.addEventListener('click', () => {
+            if (!recognition) return;
+            
+            // Reset State
+            conversationHistory = "";
+            conversationLog.innerHTML = "";
+            diagnosisOutput.textContent = "Analyzing...";
+            questionsOutput.textContent = "Analyzing...";
+            
+            // Start Listening
+            isListening = true;
+            try {
+                recognition.start();
+            } catch (e) {
+                // Already started
+            }
+        });
+
+        btnFinish.addEventListener('click', () => {
+            isListening = false;
+            if (recognition) recognition.stop();
+            statusText.textContent = "Session Finished";
+        });
+
+        // Handle New Text
+        async function handleNewSpeech(text) {
+            // 1. Update UI
+            const timestamp = new Date().toLocaleTimeString();
+            const newEntry = `<div class="log-entry patient">[${timestamp}] ${text}</div>`;
+            conversationLog.innerHTML += newEntry;
+            conversationLog.scrollTop = conversationLog.scrollHeight; // Auto scroll
+
+            // 2. Update History Variable
+            conversationHistory += text + "\n";
+
+            // 3. Send to FastAPI Backend
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ history: conversationHistory })
+                });
+
+                if (!response.ok) throw new Error("Backend Error");
+
+                const data = await response.json();
+
+                // 4. Update Diagnosis and Questions from AI
+                // Assuming backend returns { "diagnosis": "...", "questions": "..." }
+                if (data.diagnosis) diagnosisOutput.textContent = data.diagnosis;
+                if (data.questions) questionsOutput.textContent = data.questions;
+
+            } catch (error) {
+                console.error("API Error:", error);
+                // Only show error text if it's empty or waiting
+                if (diagnosisOutput.textContent.includes("Waiting")) {
+                    diagnosisOutput.textContent = "Error connecting to backend. Is FastAPI running?";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
