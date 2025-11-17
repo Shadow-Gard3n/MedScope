@@ -1,0 +1,276 @@
+/* --- 1. GLOBAL STYLES & THEME VARIABLES --- */
+
+:root {
+    --bg-primary: #0a192f;
+    --bg-secondary: #172a46;
+    --text-primary: #ccd6f6;
+    --text-secondary: #bdc3c7;
+    --text-muted: #8892b0;
+    --accent-primary: #64ffda;
+    --accent-primary-darker: #52d3b4;
+    --accent-primary-text: #0a192f; /* Dark text for bright buttons */
+    --border-color: #304a6e;
+    --card-shadow: 0 10px 30px -15px rgba(2, 12, 27, 0.7);
+
+    /* Transitions */
+    --theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 1.2 Global Resets & Body */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    transition: var(--theme-transition);
+}
+
+/* --- Header --- */
+header { 
+    background-color: var(--bg-medium-dark); 
+    color: var(--text-bright); 
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+nav { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.logo { font-size: 1.5rem; font-weight: bold; color: var(--accent-primary); }
+nav ul { list-style: none; display: flex; margin: 0; padding: 0; }
+nav ul li { margin-left: 20px; }
+nav ul li a { 
+    color: var(--text-bright); 
+    text-decoration: none; 
+    padding: 5px 10px; 
+    border-radius: 5px; 
+    transition: background-color 0.3s, color 0.3s; 
+}
+nav ul li a:hover, nav ul li a.active { 
+    background-color: var(--accent-primary);
+    color: var(--accent-primary-text);
+}
+/* --- 3. (Dark Mode Toggle styles removed) --- */
+
+/* --- 4. MAIN CONTENT & LAYOUT --- */
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.card {
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    transition: var(--theme-transition), box-shadow 0.3s ease;
+}
+
+.card h3 {
+    color: var(--text-primary);
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+}
+
+.card h3 i {
+    margin-right: 0.75rem;
+    color: var(--accent-primary);
+}
+
+.card-content {
+    color: var(--text-secondary);
+    min-height: 50px;
+    line-height: 1.7;
+}
+
+/* --- 5. INSIGHT GRID --- */
+.insight-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+#diagnosisOutput,
+#questionsOutput {
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* --- 6. CONVERSATION SECTION --- */
+.conversation-log {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background-color: var(--bg-primary); /* Slightly different background */
+    transition: var(--theme-transition);
+}
+
+.log-entry {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    line-height: 1.5;
+}
+
+.log-entry.patient {
+    background-color: #2c3e50; /* bg-light-dark */
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* --- 7. CONTROLS, BUTTONS & STATUS --- */
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+}
+
+#micStatus {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+    margin-right: 0.75rem;
+    transition: background-color 0.3s ease;
+}
+
+#micStatus.active {
+    background-color: var(--accent-primary);
+}
+
+/* Pulse Animation */
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(100, 255, 218, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(100, 255, 218, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(100, 255, 218, 0);
+    }
+}
+
+#statusText {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-restart {
+    background-color: var(--accent-primary);
+    color: var(--accent-primary-text);
+}
+
+.btn-restart:hover {
+    background-color: var(--accent-primary-darker);
+}
+
+.btn-finish {
+    background-color: var(--bg-primary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-finish:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* --- 8. RESPONSIVENESS (Mobile) --- */
+@media (max-width: 900px) {
+    .insight-grid {
+        grid-template-columns: 1fr;
+    }
+
+    header {
+        padding: 1rem;
+    }
+
+    nav ul {
+        display: none; /* Simple responsive behavior */
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        font-size: 14px;
+    }
+
+    main {
+        padding: 0 0.5rem;
+        margin: 1rem auto;
+    }
+    
+    header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    nav {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn {
+        justify-content: center;
+    }
+}

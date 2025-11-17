@@ -33,6 +33,18 @@ async def get_user_home(request: Request, user_id: str, current_user: str = Depe
         return templates.TemplateResponse("home.html", {"request": request, "user": user})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.get("/assistant/{user_id}", response_class=HTMLResponse)
+async def get_user_home(request: Request, user_id: str, current_user: str = Depends(get_current_user)):
+    if current_user is None or current_user != user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        user = auth.get_user(current_user)
+        return templates.TemplateResponse("assistant.html", {"request": request, "user": user})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     
 @router.get("/profile/{user_id}", response_class=HTMLResponse)
