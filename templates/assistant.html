@@ -70,10 +70,9 @@
 
     <script>
         // --- CONFIGURATION ---
-        const API_URL = "http://127.0.0.1:8000/process-conversation"; // Update if your FastAPI port differs
+        const API_URL = "http://127.0.0.1:8000"; 
         
         // --- DOM ELEMENTS ---
-        const darkModeToggle = document.getElementById('darkModeToggle');
         const btnRestart = document.getElementById('btnRestart');
         const btnFinish = document.getElementById('btnFinish');
         const conversationLog = document.getElementById('conversationLog');
@@ -86,11 +85,6 @@
         let isListening = false;
         let conversationHistory = "";
         let recognition;
-
-        // --- 1. DARK MODE LOGIC ---
-        darkModeToggle.addEventListener('change', () => {
-            document.body.classList.toggle('dark-mode');
-        });
 
         // --- 2. SPEECH RECOGNITION SETUP ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -168,42 +162,95 @@
         });
 
         // Handle New Text
+        
         async function handleNewSpeech(text) {
-            // 1. Update UI
+            // 1. Update UI with the patient's speech
             const timestamp = new Date().toLocaleTimeString();
             const newEntry = `<div class="log-entry patient">[${timestamp}] ${text}</div>`;
             conversationLog.innerHTML += newEntry;
             conversationLog.scrollTop = conversationLog.scrollHeight; // Auto scroll
 
             // 2. Update History Variable
-            conversationHistory += text + "\n";
+            conversationHistory += `Patient: ${text}\n`; // Added "Patient:" prefix for clarity
 
-            // 3. Send to FastAPI Backend
+            // 3. Start the two-part fetch process
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ history: conversationHistory })
-                });
+                // First, get the streaming conversational reply
+                await fetchStreamedReply(conversationHistory);
 
-                if (!response.ok) throw new Error("Backend Error");
-
-                const data = await response.json();
-
-                // 4. Update Diagnosis and Questions from AI
-                // Assuming backend returns { "diagnosis": "...", "questions": "..." }
-                if (data.diagnosis) diagnosisOutput.textContent = data.diagnosis;
-                if (data.questions) questionsOutput.textContent = data.questions;
+                // After the stream is done, get the final analysis
+                await fetchAnalysis(conversationHistory);
 
             } catch (error) {
                 console.error("API Error:", error);
-                // Only show error text if it's empty or waiting
                 if (diagnosisOutput.textContent.includes("Waiting")) {
                     diagnosisOutput.textContent = "Error connecting to backend. Is FastAPI running?";
                 }
             }
+        }
+
+        /**
+         * Fetches the streaming conversational reply from the backend.
+         */
+        async function fetchStreamedReply(history) {
+            const response = await fetch(`${API_URL}/stream-reply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ history: history })
+            });
+
+            if (!response.ok) throw new Error("Backend stream error");
+
+            // Create a new log entry for the AI
+            const aiEntry = document.createElement('div');
+            aiEntry.className = 'log-entry ai'; // You'll want to style ".log-entry.ai" in your CSS
+            aiEntry.textContent = "AI: "; // Add AI prefix
+            conversationLog.appendChild(aiEntry);
+            conversationLog.scrollTop = conversationLog.scrollHeight;
+
+            // Get the tools to read the stream
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            // Loop to read the stream
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break; // Stream is finished
+
+                const chunk = decoder.decode(value);
+                aiEntry.textContent += chunk; // Append the text chunk
+                conversationLog.scrollTop = conversationLog.scrollHeight; // Keep scrolling
+            }
+
+            // Add the AI's full reply to the history variable *after* it's done
+            conversationHistory += `${aiEntry.textContent}\n`;
+        }
+
+        /**
+         * Fetches the final analysis for the side panels.
+         */
+        async function fetchAnalysis(history) {
+            // Set panels to "Analyzing..."
+            diagnosisOutput.textContent = "Analyzing...";
+            questionsOutput.textContent = "Analyzing...";
+
+            const response = await fetch(`${API_URL}/get-analysis`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ history: history })
+            });
+
+            if (!response.ok) throw new Error("Backend analysis error");
+
+            const data = await response.json();
+
+            // Update Diagnosis and Questions from AI
+            if (data.diagnosis) diagnosisOutput.textContent = data.diagnosis;
+            if (data.questions) questionsOutput.textContent = data.questions;
         }
     </script>
 </body>
