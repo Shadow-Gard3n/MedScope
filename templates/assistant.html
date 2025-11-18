@@ -6,9 +6,7 @@
     <title>Medical AI Assistant</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/assistantStyle.css">
-
-    
+    <link rel="stylesheet" href="/static/css/assistantStyle.css"> 
 </head>
 <body>
     <header>
@@ -26,30 +24,31 @@
     </header>
 
     <main>
-        <!-- Top Section: Insights -->
         <div class="insight-grid">
-            <!-- Diagnosis Column -->
             <div class="card diagnosis-card">
-                <h3><i class="fa-solid fa-stethoscope"></i> Potential Diagnosis</h3>
+                <h3>
+                    <i class="fa-solid fa-stethoscope"></i> Potential Diagnosis
+                    <span id="diagStatus" class="live-indicator"><i class="fa-solid fa-sync fa-spin"></i> Updating...</span>
+                </h3>
                 <div id="diagnosisOutput" class="card-content">
                     Waiting for consultation data...
                 </div>
             </div>
 
-            <!-- Questions Column -->
             <div class="card questions-card">
-                <h3><i class="fa-solid fa-circle-question"></i> Suggested Questions</h3>
+                <h3>
+                    <i class="fa-solid fa-circle-question"></i> Suggested Questions
+                    <span id="questStatus" class="live-indicator"><i class="fa-solid fa-sync fa-spin"></i> Updating...</span>
+                </h3>
                 <div id="questionsOutput" class="card-content">
                     Waiting for consultation data...
                 </div>
             </div>
         </div>
 
-        <!-- Bottom Section: Conversation -->
         <div class="card conversation-section">
             <h3><i class="fa-solid fa-comments"></i> Live Consultation</h3>
             <div id="conversationLog" class="conversation-log">
-                <!-- Text will be injected here -->
             </div>
             <div class="controls">
                 <div class="status-indicator">
@@ -58,19 +57,20 @@
                 </div>
                 <div class="btn-group">
                     <button id="btnRestart" class="btn btn-restart">
-                        <i class="fa-solid fa-microphone"></i> Start / Restart
+                        <i class="fa-solid fa-microphone"></i> Start Session
                     </button>
                     <button id="btnFinish" class="btn btn-finish">
-                        <i class="fa-solid fa-stop"></i> Finish
+                        <i class="fa-solid fa-stop"></i> End Session
                     </button>
                 </div>
             </div>
         </div>
     </main>
 
-    <script>
+    <!-- <script>
         // --- CONFIGURATION ---
-        const API_URL = "http://127.0.0.1:8000"; 
+        const API_URL = ""; 
+        const ANALYSIS_INTERVAL_MS = 5000; // Frequency of analysis (5 seconds)
         
         // --- DOM ELEMENTS ---
         const btnRestart = document.getElementById('btnRestart');
@@ -80,36 +80,38 @@
         const questionsOutput = document.getElementById('questionsOutput');
         const micStatus = document.getElementById('micStatus');
         const statusText = document.getElementById('statusText');
+        const diagStatus = document.getElementById('diagStatus');
+        const questStatus = document.getElementById('questStatus');
 
         // --- STATE ---
         let isListening = false;
+        let isAnalyzing = false; // Prevents overlapping API calls
         let conversationHistory = "";
         let recognition;
+        let analysisTimer = null; // Stores the interval ID
+        let lastAnalyzedLength = 0; // To check if we actually have NEW text
 
-        // --- 2. SPEECH RECOGNITION SETUP ---
+        // --- SPEECH RECOGNITION SETUP ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
-            recognition.continuous = true; // Keep listening until stopped
-            recognition.interimResults = false; // Only show final results
+            recognition.continuous = true; 
+            recognition.interimResults = false;
             recognition.lang = 'en-US';
 
             recognition.onstart = () => {
                 isListening = true;
                 micStatus.classList.add('active');
-                statusText.textContent = "Listening to conversation...";
-                statusText.style.color = "var(--primary)";
+                statusText.textContent = "Listening and Analyzing...";
             };
 
             recognition.onend = () => {
-                // Auto-restart if we think we should still be listening
                 if (isListening) {
                     recognition.start();
                 } else {
                     micStatus.classList.remove('active');
-                    statusText.textContent = "Session Paused";
-                    statusText.style.color = "var(--text-muted)";
+                    statusText.textContent = "Session Ended";
                 }
             };
 
@@ -125,132 +127,301 @@
             recognition.onerror = (event) => {
                 console.error("Speech Error:", event.error);
                 if(event.error === 'not-allowed') {
-                    alert("Microphone access denied. Please allow permissions.");
-                    isListening = false;
+                    alert("Microphone access denied.");
+                    stopSession();
                 }
             };
         } else {
-            alert("Your browser does not support Speech Recognition. Please use Chrome or Edge.");
+            alert("Browser not supported. Please use Chrome/Edge.");
             btnRestart.disabled = true;
         }
 
-        // --- 3. CORE LOGIC ---
+        // --- CONTROLS ---
 
-        // Handle Button Clicks
         btnRestart.addEventListener('click', () => {
             if (!recognition) return;
             
             // Reset State
             conversationHistory = "";
+            lastAnalyzedLength = 0;
             conversationLog.innerHTML = "";
-            diagnosisOutput.textContent = "Analyzing...";
-            questionsOutput.textContent = "Analyzing...";
+            diagnosisOutput.innerHTML = "<i>Listening for symptoms...</i>";
+            questionsOutput.innerHTML = "<i>Listening for context...</i>"; 
             
-            // Start Listening
             isListening = true;
+            isAnalyzing = false;
+
+            // Start Speech
             try {
                 recognition.start();
-            } catch (e) {
-                // Already started
-            }
+            } catch (e) { console.log("Mic already active"); }
+
+            // Start Auto-Analysis Loop
+            startAnalysisLoop();
         });
 
         btnFinish.addEventListener('click', () => {
-            isListening = false;
-            if (recognition) recognition.stop();
-            statusText.textContent = "Session Finished";
+            stopSession();
         });
 
-        // Handle New Text
-        
-        async function handleNewSpeech(text) {
-            // 1. Update UI with the patient's speech
+        function stopSession() {
+            isListening = false;
+            if (recognition) recognition.stop();
+            
+            // Stop the loop
+            if (analysisTimer) clearInterval(analysisTimer);
+            
+            diagStatus.classList.remove('active');
+            questStatus.classList.remove('active');
+            statusText.textContent = "Session Finished";
+        }
+
+        // --- LOGIC ---
+
+        function handleNewSpeech(text) {
             const timestamp = new Date().toLocaleTimeString();
-            const newEntry = `<div class="log-entry patient">[${timestamp}] ${text}</div>`;
+            const newEntry = `<div class="log-entry patient"><strong>[${timestamp}]</strong> ${text}</div>`;
             conversationLog.innerHTML += newEntry;
-            conversationLog.scrollTop = conversationLog.scrollHeight; // Auto scroll
+            conversationLog.scrollTop = conversationLog.scrollHeight; 
 
-            // 2. Update History Variable
-            conversationHistory += `Patient: ${text}\n`; // Added "Patient:" prefix for clarity
+            conversationHistory += `Patient: ${text}\n`; 
+        }
 
-            // 3. Start the two-part fetch process
+        function startAnalysisLoop() {
+            // Clear any existing timer just in case
+            if (analysisTimer) clearInterval(analysisTimer);
+
+            // Set new timer
+            analysisTimer = setInterval(() => {
+                // 1. Check if we are already analyzing (don't stack requests)
+                // 2. Check if we actually have history
+                // 3. Check if there is NEW data since last time (optimization)
+                if (!isAnalyzing && conversationHistory.length > lastAnalyzedLength) {
+                    fetchAnalysis(conversationHistory);
+                }
+            }, ANALYSIS_INTERVAL_MS);
+        }
+
+        // Markdown to HTML formatter
+        function formatLLMOutput(text) {
+            if (!text) return "No data available.";
+            let formatted = text.replace(/\n/g, '<br>');
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/^\* /gm, '• ');
+            return formatted;
+        }
+
+        async function fetchAnalysis(history) {
+            isAnalyzing = true;
+            
+            // Show small spinner icons next to headers
+            diagStatus.classList.add('active');
+            questStatus.classList.add('active');
+
+            // Update 'checkpoint' so we know what we've analyzed
+            lastAnalyzedLength = history.length; 
+
             try {
-                // First, get the streaming conversational reply
-                await fetchStreamedReply(conversationHistory);
+                const response = await fetch(`${API_URL}/get-analysis`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ history: history })
+                });
 
-                // After the stream is done, get the final analysis
-                await fetchAnalysis(conversationHistory);
+                if (!response.ok) throw new Error(`Backend error: ${response.statusText}`);
+                const data = await response.json();
+
+                if (data.diagnosis) diagnosisOutput.innerHTML = formatLLMOutput(data.diagnosis);
+                if (data.questions) questionsOutput.innerHTML = formatLLMOutput(data.questions);
 
             } catch (error) {
                 console.error("API Error:", error);
-                if (diagnosisOutput.textContent.includes("Waiting")) {
-                    diagnosisOutput.textContent = "Error connecting to backend. Is FastAPI running?";
+                // Don't wipe the old data on error, just log it
+            } finally {
+                isAnalyzing = false;
+                // Hide spinners
+                diagStatus.classList.remove('active');
+                questStatus.classList.remove('active');
+            }
+        }
+    </script> -->
+    <script>
+        // --- CONFIGURATION ---
+        const API_URL = ""; 
+        const ANALYSIS_INTERVAL_MS = 5000; // Updates diagnosis every 5 seconds
+        
+        // --- DOM ELEMENTS ---
+        const btnRestart = document.getElementById('btnRestart');
+        const btnFinish = document.getElementById('btnFinish');
+        const conversationLog = document.getElementById('conversationLog');
+        const diagnosisOutput = document.getElementById('diagnosisOutput');
+        const questionsOutput = document.getElementById('questionsOutput');
+        const micStatus = document.getElementById('micStatus');
+        const statusText = document.getElementById('statusText');
+        const diagStatus = document.getElementById('diagStatus');
+        const questStatus = document.getElementById('questStatus');
+
+        // --- STATE ---
+        let isListening = false; // Master switch
+        let isAnalyzing = false; 
+        let conversationHistory = "";
+        let recognition;
+        let analysisTimer = null; 
+        let lastAnalyzedLength = 0; 
+
+        // --- SPEECH RECOGNITION SETUP ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;  // Keep listening as long as possible
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                micStatus.classList.add('active');
+                statusText.textContent = "Listening...";
+            };
+
+            // --- THE CRITICAL FIX: AUTO-RESTART ---
+            recognition.onend = () => {
+                if (isListening) {
+                    // If the user didn't click stop, the browser cut us off.
+                    // Restart immediately.
+                    console.log("Browser stopped mic. Restarting...");
+                    recognition.start();
+                } else {
+                    // User clicked stop.
+                    micStatus.classList.remove('active');
+                    statusText.textContent = "Session Ended";
                 }
-            }
+            };
+
+            recognition.onresult = (event) => {
+                const current = event.resultIndex;
+                const transcript = event.results[current][0].transcript.trim();
+                
+                if(transcript) {
+                    handleNewSpeech(transcript);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech Error:", event.error);
+                // Ignore 'no-speech' errors, just let it restart in onend
+                if(event.error === 'not-allowed') {
+                    alert("Microphone access denied.");
+                    stopSession();
+                }
+            };
+        } else {
+            alert("Browser not supported. Please use Chrome/Edge.");
+            btnRestart.disabled = true;
         }
 
-        /**
-         * Fetches the streaming conversational reply from the backend.
-         */
-        async function fetchStreamedReply(history) {
-            const response = await fetch(`${API_URL}/stream-reply`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ history: history })
-            });
+        // --- CONTROLS ---
 
-            if (!response.ok) throw new Error("Backend stream error");
+        btnRestart.addEventListener('click', () => {
+            if (!recognition) return;
+            
+            // 1. Reset UI
+            conversationHistory = "";
+            lastAnalyzedLength = 0;
+            conversationLog.innerHTML = "";
+            diagnosisOutput.innerHTML = "<i>Listening for symptoms...</i>";
+            questionsOutput.innerHTML = "<i>Listening for context...</i>"; 
+            
+            // 2. Set Master Switch ON
+            isListening = true;
+            isAnalyzing = false;
 
-            // Create a new log entry for the AI
-            const aiEntry = document.createElement('div');
-            aiEntry.className = 'log-entry ai'; // You'll want to style ".log-entry.ai" in your CSS
-            aiEntry.textContent = "AI: "; // Add AI prefix
-            conversationLog.appendChild(aiEntry);
-            conversationLog.scrollTop = conversationLog.scrollHeight;
+            // 3. Start Mic
+            try {
+                recognition.start();
+            } catch (e) { console.log("Mic already active"); }
 
-            // Get the tools to read the stream
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
+            // 4. Start the Analysis Loop
+            startAnalysisLoop();
+        });
 
-            // Loop to read the stream
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break; // Stream is finished
+        btnFinish.addEventListener('click', () => {
+            stopSession();
+        });
 
-                const chunk = decoder.decode(value);
-                aiEntry.textContent += chunk; // Append the text chunk
-                conversationLog.scrollTop = conversationLog.scrollHeight; // Keep scrolling
-            }
-
-            // Add the AI's full reply to the history variable *after* it's done
-            conversationHistory += `${aiEntry.textContent}\n`;
+        function stopSession() {
+            isListening = false; // Turn off Master Switch
+            if (recognition) recognition.stop();
+            
+            // Stop the background analysis
+            if (analysisTimer) clearInterval(analysisTimer);
+            
+            diagStatus.classList.remove('active');
+            questStatus.classList.remove('active');
+            statusText.textContent = "Session Finished";
         }
 
-        /**
-         * Fetches the final analysis for the side panels.
-         */
+        // --- LOGIC ---
+
+        function handleNewSpeech(text) {
+            const timestamp = new Date().toLocaleTimeString();
+            const newEntry = `<div class="log-entry patient"><strong>[${timestamp}]</strong> ${text}</div>`;
+            conversationLog.innerHTML += newEntry;
+            conversationLog.scrollTop = conversationLog.scrollHeight; 
+
+            conversationHistory += `Patient: ${text}\n`; 
+        }
+
+        function startAnalysisLoop() {
+            if (analysisTimer) clearInterval(analysisTimer);
+
+            // Check every 5 seconds
+            analysisTimer = setInterval(() => {
+                // Only send to backend if:
+                // 1. We are not currently waiting for a previous response
+                // 2. The user has actually said something new since last time
+                if (!isAnalyzing && conversationHistory.length > lastAnalyzedLength) {
+                    fetchAnalysis(conversationHistory);
+                }
+            }, ANALYSIS_INTERVAL_MS);
+        }
+
+        function formatLLMOutput(text) {
+            if (!text) return "No data available.";
+            let formatted = text.replace(/\n/g, '<br>');
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/^\* /gm, '• ');
+            return formatted;
+        }
+
         async function fetchAnalysis(history) {
-            // Set panels to "Analyzing..."
-            diagnosisOutput.textContent = "Analyzing...";
-            questionsOutput.textContent = "Analyzing...";
+            isAnalyzing = true;
+            
+            // Update Checkpoint immediately so we don't re-send the same text next loop
+            lastAnalyzedLength = history.length; 
+            
+            diagStatus.classList.add('active');
+            questStatus.classList.add('active');
 
-            const response = await fetch(`${API_URL}/get-analysis`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ history: history })
-            });
+            try {
+                const response = await fetch(`${API_URL}/get-analysis`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ history: history })
+                });
 
-            if (!response.ok) throw new Error("Backend analysis error");
+                if (!response.ok) throw new Error(`Backend error: ${response.statusText}`);
+                const data = await response.json();
 
-            const data = await response.json();
+                if (data.diagnosis) diagnosisOutput.innerHTML = formatLLMOutput(data.diagnosis);
+                if (data.questions) questionsOutput.innerHTML = formatLLMOutput(data.questions);
 
-            // Update Diagnosis and Questions from AI
-            if (data.diagnosis) diagnosisOutput.textContent = data.diagnosis;
-            if (data.questions) questionsOutput.textContent = data.questions;
+            } catch (error) {
+                console.error("API Error:", error);
+            } finally {
+                isAnalyzing = false;
+                diagStatus.classList.remove('active');
+                questStatus.classList.remove('active');
+            }
         }
     </script>
 </body>
