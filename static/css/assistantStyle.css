@@ -274,3 +274,15 @@ main {
         justify-content: center;
     }
 }
+
+
+/* Small addition for the live indicator */
+        .live-indicator {
+            font-size: 0.8rem;
+            color: #2ecc71;
+            margin-left: 10px;
+            display: none; /* Hidden by default */
+        }
+        .live-indicator.active {
+            display: inline-block;
+        }
