@@ -2,6 +2,10 @@
 
 MedScope is a Python-based backend service built with FastAPI. It provides a suite of tools for medical information, including ML-powered drug risk prediction, a drug alternatives finder, and an intelligent chatbot powered by Google's Gemini AI. User management and data storage are handled by Firebase.
 
+## 🚀 Live Site
+
+You can access the live MedScope backend here:
+**https://shadowgard3n-medscope-backend.hf.space/login**
 
 ## Data Sources
 
