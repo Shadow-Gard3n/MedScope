@@ -15,7 +15,7 @@
             <ul>
                 <li><a href="/home/{{ user.uid }}">Home</a></li>
                 <li><a href="/assistant/{{ user.uid }}" class="active">Assistant</a></li>
-                <li><a href="/alternatives/{{ user.uid }}" >Alternatives</a></li>
+                <li><a href="/alternatives/{{ user.uid }}">Alternatives</a></li>
                 <li><a href="/chat/{{ user.uid }}">Chatbot</a></li>
                 <li><a href="/profile/{{ user.uid }}">Profile</a></li>
                 <li><a href="/logout">Logout</a></li>
@@ -28,44 +28,185 @@
             <div class="card diagnosis-card">
                 <h3>
                     <i class="fa-solid fa-stethoscope"></i> Potential Diagnosis
-                    <span id="diagStatus" class="live-indicator"><i class="fa-solid fa-sync fa-spin"></i> Updating...</span>
+                    <span id="diagStatus" class="live-indicator" style="display:none; font-size:0.8rem; color:#2ecc71; margin-left:10px;">
+                        <i class="fa-solid fa-bolt"></i> Live
+                    </span>
                 </h3>
-                <div id="diagnosisOutput" class="card-content">
-                    Waiting for consultation data...
-                </div>
+                <div id="diagnosisOutput" class="card-content">Waiting for data...</div>
             </div>
 
             <div class="card questions-card">
                 <h3>
                     <i class="fa-solid fa-circle-question"></i> Suggested Questions
-                    <span id="questStatus" class="live-indicator"><i class="fa-solid fa-sync fa-spin"></i> Updating...</span>
+                    <span id="questStatus" class="live-indicator" style="display:none; font-size:0.8rem; color:#2ecc71; margin-left:10px;">
+                        <i class="fa-solid fa-bolt"></i> Live
+                    </span>
                 </h3>
-                <div id="questionsOutput" class="card-content">
-                    Waiting for consultation data...
-                </div>
+                <div id="questionsOutput" class="card-content">Waiting for data...</div>
             </div>
         </div>
 
         <div class="card conversation-section">
             <h3><i class="fa-solid fa-comments"></i> Live Consultation</h3>
-            <div id="conversationLog" class="conversation-log">
-            </div>
+            <div id="conversationLog" class="conversation-log"></div>
             <div class="controls">
                 <div class="status-indicator">
                     <div id="micStatus" class="pulse"></div>
-                    <span id="statusText">Ready to start</span>
+                    <span id="statusText">Ready</span>
                 </div>
                 <div class="btn-group">
                     <button id="btnRestart" class="btn btn-restart">
-                        <i class="fa-solid fa-microphone"></i> Start Session
+                        <i class="fa-solid fa-microphone"></i> Start
                     </button>
                     <button id="btnFinish" class="btn btn-finish">
-                        <i class="fa-solid fa-stop"></i> End Session
+                        <i class="fa-solid fa-stop"></i> Stop
                     </button>
                 </div>
             </div>
         </div>
     </main>
+
+    <script>
+        // --- CONFIGURATION ---
+        // Dynamically detect WS protocol (ws:// or wss://)
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const WS_URL = `${protocol}//${window.location.host}/ws/analysis/{{ user.uid }}`;
+        
+        // --- DOM ELEMENTS ---
+        const btnRestart = document.getElementById('btnRestart');
+        const btnFinish = document.getElementById('btnFinish');
+        const conversationLog = document.getElementById('conversationLog');
+        const diagnosisOutput = document.getElementById('diagnosisOutput');
+        const questionsOutput = document.getElementById('questionsOutput');
+        const micStatus = document.getElementById('micStatus');
+        const statusText = document.getElementById('statusText');
+        const diagStatus = document.getElementById('diagStatus');
+        const questStatus = document.getElementById('questStatus');
+
+        // --- STATE ---
+        let isListening = false;
+        let conversationHistory = "";
+        let recognition;
+        let socket; // The WebSocket connection
+        let updateTimer = null;
+
+        // --- 1. WEBSOCKET SETUP (The Speed Booster) ---
+        function connectWebSocket() {
+            socket = new WebSocket(WS_URL);
+
+            socket.onopen = () => {
+                console.log("Connected to Analysis Server");
+            };
+
+            socket.onmessage = (event) => {
+                // When backend sends data, update UI instantly
+                const data = JSON.parse(event.data);
+                
+                if (data.diagnosis) {
+                    diagnosisOutput.innerHTML = formatLLMOutput(data.diagnosis);
+                    diagStatus.style.display = 'inline-block';
+                }
+                if (data.questions) {
+                    questionsOutput.innerHTML = formatLLMOutput(data.questions);
+                    questStatus.style.display = 'inline-block';
+                }
+                
+                // Hide the "Live" indicators after 2 seconds
+                setTimeout(() => {
+                    diagStatus.style.display = 'none';
+                    questStatus.style.display = 'none';
+                }, 2000);
+            };
+
+            socket.onclose = () => {
+                console.log("Disconnected. Reconnecting...");
+                // Simple reconnect logic
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // Initialize connection immediately
+        connectWebSocket();
+
+
+        // --- 2. SPEECH RECOGNITION ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                micStatus.classList.add('active');
+                statusText.textContent = "Listening...";
+            };
+
+            recognition.onend = () => {
+                if (isListening) {
+                    recognition.start(); // Auto-restart (Always-on)
+                } else {
+                    micStatus.classList.remove('active');
+                    statusText.textContent = "Stopped";
+                }
+            };
+
+            recognition.onresult = (event) => {
+                const current = event.resultIndex;
+                const transcript = event.results[current][0].transcript.trim();
+                
+                if(transcript) {
+                    handleNewSpeech(transcript);
+                }
+            };
+        }
+
+        // --- 3. LOGIC ---
+
+        function handleNewSpeech(text) {
+            // Update UI Log
+            const timestamp = new Date().toLocaleTimeString();
+            conversationLog.innerHTML += `<div class="log-entry patient"><strong>[${timestamp}]</strong> ${text}</div>`;
+            conversationLog.scrollTop = conversationLog.scrollHeight; 
+
+            conversationHistory += `Patient: ${text}\n`;
+
+            // SEND TO BACKEND VIA WEBSOCKET IMMEDIATELY
+            // Debounce slightly to avoid spamming if speech is choppy (wait 1s after speech stops)
+            clearTimeout(updateTimer);
+            updateTimer = setTimeout(() => {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    statusText.textContent = "Analyzing...";
+                    socket.send(JSON.stringify({ history: conversationHistory }));
+                }
+            }, 1000); 
+        }
+
+        btnRestart.addEventListener('click', () => {
+            if (!recognition) return;
+            conversationHistory = "";
+            conversationLog.innerHTML = "";
+            isListening = true;
+            recognition.start();
+        });
+
+        btnFinish.addEventListener('click', () => {
+            isListening = false;
+            recognition.stop();
+        });
+
+        // Formatter
+        function formatLLMOutput(text) {
+            if (!text) return "";
+            let formatted = text.replace(/\n/g, '<br>');
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/^\* /gm, '• ');
+            return formatted;
+        }
+    </script>
+</body>
+</html>
 
     <!-- <script>
         // --- CONFIGURATION ---
@@ -245,184 +386,4 @@
             }
         }
     </script> -->
-    <script>
-        // --- CONFIGURATION ---
-        const API_URL = ""; 
-        const ANALYSIS_INTERVAL_MS = 5000; // Updates diagnosis every 5 seconds
-        
-        // --- DOM ELEMENTS ---
-        const btnRestart = document.getElementById('btnRestart');
-        const btnFinish = document.getElementById('btnFinish');
-        const conversationLog = document.getElementById('conversationLog');
-        const diagnosisOutput = document.getElementById('diagnosisOutput');
-        const questionsOutput = document.getElementById('questionsOutput');
-        const micStatus = document.getElementById('micStatus');
-        const statusText = document.getElementById('statusText');
-        const diagStatus = document.getElementById('diagStatus');
-        const questStatus = document.getElementById('questStatus');
-
-        // --- STATE ---
-        let isListening = false; // Master switch
-        let isAnalyzing = false; 
-        let conversationHistory = "";
-        let recognition;
-        let analysisTimer = null; 
-        let lastAnalyzedLength = 0; 
-
-        // --- SPEECH RECOGNITION SETUP ---
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;  // Keep listening as long as possible
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            recognition.onstart = () => {
-                micStatus.classList.add('active');
-                statusText.textContent = "Listening...";
-            };
-
-            // --- THE CRITICAL FIX: AUTO-RESTART ---
-            recognition.onend = () => {
-                if (isListening) {
-                    // If the user didn't click stop, the browser cut us off.
-                    // Restart immediately.
-                    console.log("Browser stopped mic. Restarting...");
-                    recognition.start();
-                } else {
-                    // User clicked stop.
-                    micStatus.classList.remove('active');
-                    statusText.textContent = "Session Ended";
-                }
-            };
-
-            recognition.onresult = (event) => {
-                const current = event.resultIndex;
-                const transcript = event.results[current][0].transcript.trim();
-                
-                if(transcript) {
-                    handleNewSpeech(transcript);
-                }
-            };
-
-            recognition.onerror = (event) => {
-                console.error("Speech Error:", event.error);
-                // Ignore 'no-speech' errors, just let it restart in onend
-                if(event.error === 'not-allowed') {
-                    alert("Microphone access denied.");
-                    stopSession();
-                }
-            };
-        } else {
-            alert("Browser not supported. Please use Chrome/Edge.");
-            btnRestart.disabled = true;
-        }
-
-        // --- CONTROLS ---
-
-        btnRestart.addEventListener('click', () => {
-            if (!recognition) return;
-            
-            // 1. Reset UI
-            conversationHistory = "";
-            lastAnalyzedLength = 0;
-            conversationLog.innerHTML = "";
-            diagnosisOutput.innerHTML = "<i>Listening for symptoms...</i>";
-            questionsOutput.innerHTML = "<i>Listening for context...</i>"; 
-            
-            // 2. Set Master Switch ON
-            isListening = true;
-            isAnalyzing = false;
-
-            // 3. Start Mic
-            try {
-                recognition.start();
-            } catch (e) { console.log("Mic already active"); }
-
-            // 4. Start the Analysis Loop
-            startAnalysisLoop();
-        });
-
-        btnFinish.addEventListener('click', () => {
-            stopSession();
-        });
-
-        function stopSession() {
-            isListening = false; // Turn off Master Switch
-            if (recognition) recognition.stop();
-            
-            // Stop the background analysis
-            if (analysisTimer) clearInterval(analysisTimer);
-            
-            diagStatus.classList.remove('active');
-            questStatus.classList.remove('active');
-            statusText.textContent = "Session Finished";
-        }
-
-        // --- LOGIC ---
-
-        function handleNewSpeech(text) {
-            const timestamp = new Date().toLocaleTimeString();
-            const newEntry = `<div class="log-entry patient"><strong>[${timestamp}]</strong> ${text}</div>`;
-            conversationLog.innerHTML += newEntry;
-            conversationLog.scrollTop = conversationLog.scrollHeight; 
-
-            conversationHistory += `Patient: ${text}\n`; 
-        }
-
-        function startAnalysisLoop() {
-            if (analysisTimer) clearInterval(analysisTimer);
-
-            // Check every 5 seconds
-            analysisTimer = setInterval(() => {
-                // Only send to backend if:
-                // 1. We are not currently waiting for a previous response
-                // 2. The user has actually said something new since last time
-                if (!isAnalyzing && conversationHistory.length > lastAnalyzedLength) {
-                    fetchAnalysis(conversationHistory);
-                }
-            }, ANALYSIS_INTERVAL_MS);
-        }
-
-        function formatLLMOutput(text) {
-            if (!text) return "No data available.";
-            let formatted = text.replace(/\n/g, '<br>');
-            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/^\* /gm, '• ');
-            return formatted;
-        }
-
-        async function fetchAnalysis(history) {
-            isAnalyzing = true;
-            
-            // Update Checkpoint immediately so we don't re-send the same text next loop
-            lastAnalyzedLength = history.length; 
-            
-            diagStatus.classList.add('active');
-            questStatus.classList.add('active');
-
-            try {
-                const response = await fetch(`${API_URL}/get-analysis`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ history: history })
-                });
-
-                if (!response.ok) throw new Error(`Backend error: ${response.statusText}`);
-                const data = await response.json();
-
-                if (data.diagnosis) diagnosisOutput.innerHTML = formatLLMOutput(data.diagnosis);
-                if (data.questions) questionsOutput.innerHTML = formatLLMOutput(data.questions);
-
-            } catch (error) {
-                console.error("API Error:", error);
-            } finally {
-                isAnalyzing = false;
-                diagStatus.classList.remove('active');
-                questStatus.classList.remove('active');
-            }
-        }
-    </script>
-</body>
-</html>
+    
